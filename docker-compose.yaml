@@ -1,3 +1,67 @@
+# services:
+#   api:
+#     build:
+#       context: .
+#       dockerfile: docker/django/Dockerfile
+#     container_name: aliexpress_api
+#     command: /entrypoint.sh
+#     volumes:
+#       - .:/app
+#     ports:
+#       - "8000:8000"
+#     env_file:
+#       - .env
+#     depends_on:
+#       - db
+#       - kafka
+#       - redis
+
+#   db:
+#     image: postgres:15
+#     container_name: aliexpress_db
+#     environment:
+#       POSTGRES_DB: ${POSTGRES_DB}
+#       POSTGRES_USER: ${POSTGRES_USER}
+#       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+
+#   redis:
+#     image: redis:7
+#     container_name: aliexpress_redis
+#     ports:
+#       - "6379:6379"
+
+#   zookeeper:
+#     image: confluentinc/cp-zookeeper:7.5.3
+#     container_name: aliexpress_zookeeper
+#     environment:
+#       ZOOKEEPER_CLIENT_PORT: 2181
+#       ZOOKEEPER_TICK_TIME: 2000
+#     ports:
+#       - "2181:2181"
+
+#   kafka:
+#     image: confluentinc/cp-kafka:7.5.3
+#     container_name: aliexpress_kafka
+#     depends_on:
+#       - zookeeper
+#     ports:
+#       - "9092:9092"
+#     environment:
+#       KAFKA_BROKER_ID: 1
+#       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+#       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+#       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+#       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+#       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+#       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+# volumes:
+#   postgres_data:
+
 services:
   api:
     build:
@@ -15,6 +79,7 @@ services:
       - db
       - kafka
       - redis
+      - elasticsearch
 
   db:
     image: postgres:15
@@ -24,15 +89,16 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "5432:5432"   # OK for local dev
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis:7
     container_name: aliexpress_redis
-    ports:
-      - "6379:6379"
+    # ❌ do NOT expose unless needed
+    # ports:
+    #   - "6379:6379"
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.3
@@ -40,16 +106,15 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
+    # ❌ internal only
+    # ports:
+    #   - "2181:2181"
 
   kafka:
     image: confluentinc/cp-kafka:7.5.3
     container_name: aliexpress_kafka
     depends_on:
       - zookeeper
-    ports:
-      - "9092:9092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -58,6 +123,23 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    # ❌ internal only
+    # ports:
+    #   - "9092:9092"
+
+  elasticsearch:
+    build:
+      context: .
+      dockerfile: docker/elasticsearch/Dockerfile
+    container_name: aliexpress_elasticsearch
+    environment:
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"   # optional (for curl / debugging)
 
 volumes:
   postgres_data:
+  es_data:
