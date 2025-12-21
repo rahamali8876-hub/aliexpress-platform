@@ -41,10 +41,15 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # Domains apps
-    "core.domains.orders.apps.OrdersConfig",
-    "core.domains.inventory.apps.InventoryConfig",
-    "core.domains.payments.apps.PaymentsConfig",
-    "core.domains.shipping.apps.ShippingConfig",
+    # "core.domains.orders.apps.OrdersConfig",
+    # "core.domains.inventory.apps.InventoryConfig",
+    # "core.domains.payments.apps.PaymentsConfig",
+    # "core.domains.shipping.apps.ShippingConfig",
+    # shared
+    "core.shared",
+    # domains
+    "core.domains.products.adapters",
+    "core.domains.orders.adapters",
 ]
 
 MIDDLEWARE = [
@@ -81,13 +86,27 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
+
+
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "aliexpress",
+        "USER": "ali",
+        "PASSWORD": "ali123",
+        "HOST": "postgres",
+        "PORT": 5432,
     }
 }
 
+REDIS_URL = "redis://redis:6379/0"
+KAFKA_BOOTSTRAP_SERVERS = ["kafka:9092"]
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators

@@ -49,139 +49,161 @@ aliexpress-clone-holy-grail/
 aliexpress-platform/
 ### Products Domain
 core/
-└── domains/
-    └── products/
-        ├── domain/                      # PURE BUSINESS (no Django)
-        │   ├── aggregates/
-        │   │   └── product_aggregate.py
-        │   │
-        │   ├── entities/
-        │   │   ├── product.py
-        │   │   ├── variant.py
-        │   │   ├── pricing.py
-        │   │   ├── image.py
-        │   │   ├── attribute.py
-        │   │   └── category_assignment.py
-        │   │
-        │   ├── value_objects/
-        │   │   ├── money.py
-        │   │   ├── sku.py
-        │   │   ├── weight.py
-        │   │   ├── dimensions.py
-        │   │   └── product_status.py
-        │   │
-        │   ├── domain_events/
-        │   │   ├── product_created.py
-        │   │   ├── product_updated.py
-        │   │   ├── product_published.py
-        │   │   ├── product_unpublished.py
-        │   │   └── product_deleted.py
-        │   │
-        │   ├── domain_services/
-        │   │   ├── product_pricing_service.py
-        │   │   ├── variant_generation_service.py
-        │   │   └── product_validation_service.py
-        │   │
-        │   ├── policies/                # BUSINESS RULES
-        │   │   ├── publishing_policy.py
-        │   │   ├── pricing_policy.py
-        │   │   └── image_policy.py
-        │   │
-        │   └── exceptions/
-        │       ├── invalid_product_state.py
-        │       ├── pricing_error.py
-        │       └── variant_error.py
+    shared/
+        ├── kernel/                      # CORE UTILITIES
+        │   ├── base_entity.py
+        │   ├── base_aggregate.py
+        │   ├── base_value_object.py
+        │   ├── domain_event.py
+        │   ├── domain_service.py
+        │   ├── policy.py
+        │   └── exceptions.py
         │
-        ├── application/                 # USE CASES
-        │   ├── use_cases/
-        │   │   ├── create_product/
-        │   │   ├── update_product/
-        │   │   ├── publish_product/
-        │   │   ├── unpublish_product/
-        │   │   ├── add_variant/
-        │   │   ├── update_pricing/
-        │   │   └── delete_product/
-        │   │
-        │   ├── ports/
-        │   │   ├── inbound/              # WHAT CAN CALL US
-        │   │   │   ├── product_command_port.py
-        │   │   │   └── product_query_port.py
-        │   │   │
-        │   │   └── outbound/             # WHAT WE DEPEND ON
-        │   │       ├── product_repository.py
-        │   │       ├── category_service_port.py
-        │   │       ├── inventory_service_port.py
-        │   │       └── event_publisher_port.py
-        │   │
-        │   └── dto/
-        │       ├── product_dto.py
-        │       └── variant_dto.py
+        ├── infrastructure/               # CROSS-CUTTING CONCERNS
+        │   ├── event_bus.py
+        │   ├── message_broker.py
+        │   ├── outbox_processor.py
+        │   ├── cache_manager.py
+        │   └── logger.py
         │
-        ├── adapters/                    # FRAMEWORKS & IO
-        │   ├── inbound/
-        │   │   ├── rest/
-        │   │   │   ├── product_views.py
-        │   │   │   ├── product_serializers.py
-        │   │   │   └── product_urls.py
-        │   │   │
-        │   │   ├── graphql/
-        │   │   │   └── product_resolvers.py
-        │   │   │
-        │   │   └── admin/
-        │   │       └── product_admin.py
-        │   │
-        │   └── outbound/
-        │       ├── persistence/
-        │       │   ├── models/
-        │       │   │   ├── product_model.py
-        │       │   │   ├── variant_model.py
-        │       │   │   ├── pricing_model.py
-        │       │   │   └── image_model.py
-        │       │   │
-        │       │   ├── mappers/
-        │       │   │   ├── product_mapper.py
-        │       │   │   ├── variant_mapper.py
-        │       │   │   ├── pricing_mapper.py
-        │       │   │   └── image_mapper.py
-        │       │   │
-        │       │   └── product_repository_impl.py
-        │       │
-        │       ├── messaging/
-        │       │   ├── product_event_publisher.py
-        │       │   └── product_event_consumer.py
-        │       │
-        │       └── cache/
-        │           └── product_cache_adapter.py
-        │
-        ├── read_model/                  # CQRS / SEARCH
-        │   ├── projections/
-        │   │   ├── product_search_projection.py
-        │   │   └── product_list_projection.py
-        │   │
-        │   ├── tables/
-        │   │   ├── product_search_table.sql
-        │   │   └── product_listing_table.sql
-        │   │
-        │   └── rebuild/
-        │       └── rebuild_product_read_model.py
-        │
-        ├── saga/                        # CROSS-DOMAIN WORKFLOWS
-        │   ├── product_publish_saga.py
-        │   └── product_delete_saga.py
-        │
-        ├── outbox/                      # EVENT GUARANTEE
-        │   └── product_outbox_model.py
-        │
-        ├── tests/
-        │   ├── domain/
-        │   ├── application/
-        │   └── adapters/
-        │
-        └── docs/
-            ├── README.md
-            ├── domain_model.md
-            ├── invariants.md
-            └── adr.md
+        └── utils/
+            ├── datetime_utils.py
+            ├── id_generator.py
+            └── validation_utils.py
+### PRODUCTS DOMAIN — HOLY GRAIL STRUCTURE
+    └── domains/
+        └── products/
+            ├── domain/                      # PURE BUSINESS (no Django)
+            │   ├── aggregates/
+            │   │   └── product_aggregate.py
+            │   │
+            │   ├── entities/
+            │   │   ├── product.py
+            │   │   ├── variant.py
+            │   │   ├── pricing.py
+            │   │   ├── image.py
+            │   │   ├── attribute.py
+            │   │   └── category_assignment.py
+            │   │
+            │   ├── value_objects/
+            │   │   ├── money.py
+            │   │   ├── sku.py
+            │   │   ├── weight.py
+            │   │   ├── dimensions.py
+            │   │   └── product_status.py
+            │   │
+            │   ├── domain_events/
+            │   │   ├── product_created.py
+            │   │   ├── product_updated.py
+            │   │   ├── product_published.py
+            │   │   ├── product_unpublished.py
+            │   │   └── product_deleted.py
+            │   │
+            │   ├── domain_services/
+            │   │   ├── product_pricing_service.py
+            │   │   ├── variant_generation_service.py
+            │   │   └── product_validation_service.py
+            │   │
+            │   ├── policies/                # BUSINESS RULES
+            │   │   ├── publishing_policy.py
+            │   │   ├── pricing_policy.py
+            │   │   └── image_policy.py
+            │   │
+            │   └── exceptions/
+            │       ├── invalid_product_state.py
+            │       ├── pricing_error.py
+            │       └── variant_error.py
+            │
+            ├── application/                 # USE CASES
+            │   ├── use_cases/
+            │   │   ├── create_product/
+            │   │   ├── update_product/
+            │   │   ├── publish_product/
+            │   │   ├── unpublish_product/
+            │   │   ├── add_variant/
+            │   │   ├── update_pricing/
+            │   │   └── delete_product/
+            │   │
+            │   ├── ports/
+            │   │   ├── inbound/              # WHAT CAN CALL US
+            │   │   │   ├── product_command_port.py
+            │   │   │   └── product_query_port.py
+            │   │   │
+            │   │   └── outbound/             # WHAT WE DEPEND ON
+            │   │       ├── product_repository.py
+            │   │       ├── category_service_port.py
+            │   │       ├── inventory_service_port.py
+            │   │       └── event_publisher_port.py
+            │   │
+            │   └── dto/
+            │       ├── product_dto.py
+            │       └── variant_dto.py
+            │
+            ├── adapters/                    # FRAMEWORKS & IO
+            │   ├── inbound/
+            │   │   ├── rest/
+            │   │   │   ├── product_views.py
+            │   │   │   ├── product_serializers.py
+            │   │   │   └── product_urls.py
+            │   │   │
+            │   │   ├── graphql/
+            │   │   │   └── product_resolvers.py
+            │   │   │
+            │   │   └── admin/
+            │   │       └── product_admin.py
+            │   │
+            │   └── outbound/
+            │       ├── persistence/
+            │       │   ├── models/
+            │       │   │   ├── product_model.py
+            │       │   │   ├── variant_model.py
+            │       │   │   ├── pricing_model.py
+            │       │   │   └── image_model.py
+            │       │   │
+            │       │   ├── mappers/
+            │       │   │   ├── product_mapper.py
+            │       │   │   ├── variant_mapper.py
+            │       │   │   ├── pricing_mapper.py
+            │       │   │   └── image_mapper.py
+            │       │   │
+            │       │   └── product_repository_impl.py
+            │       │
+            │       ├── messaging/
+            │       │   ├── product_event_publisher.py
+            │       │   └── product_event_consumer.py
+            │       │
+            │       └── cache/
+            │           └── product_cache_adapter.py
+            │
+            ├── read_model/                  # CQRS / SEARCH
+            │   ├── projections/
+            │   │   ├── product_search_projection.py
+            │   │   └── product_list_projection.py
+            │   │
+            │   ├── tables/
+            │   │   ├── product_search_table.sql
+            │   │   └── product_listing_table.sql
+            │   │
+            │   └── rebuild/
+            │       └── rebuild_product_read_model.py
+            │
+            ├── saga/                        # CROSS-DOMAIN WORKFLOWS
+            │   ├── product_publish_saga.py
+            │   └── product_delete_saga.py
+            │
+            ├── outbox/                      # EVENT GUARANTEE
+            │   └── product_outbox_model.py
+            │
+            ├── tests/
+            │   ├── domain/
+            │   ├── application/
+            │   └── adapters/
+            │
+            └── docs/
+                ├── README.md
+                ├── domain_model.md
+                ├── invariants.md
+                └── adr.md
 ### ORDERS DOMAIN — HOLY GRAIL STRUCTURE
 core/
 └── domains/
