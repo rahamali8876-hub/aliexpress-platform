@@ -14,7 +14,9 @@ from core.domains.products.adapters.outbound.persistence.product_repository_impl
 from core.domains.products.adapters.outbound.messaging.product_event_publisher import (
     ProductEventPublisher,
 )
-from .product_serializers import CreateProductSerializer
+from core.domains.products.adapters.inbound.rest.product_serializer import (
+    CreateProductSerializer,
+)
 
 
 class CreateProductView(APIView):

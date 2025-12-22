@@ -1,3 +1,5 @@
+# from core.domains.products.adapters.outbound.persistence.models.product_model import ProductModel
+
 from django.db import models
 
 

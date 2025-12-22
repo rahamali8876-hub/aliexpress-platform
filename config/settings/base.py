@@ -48,8 +48,8 @@ INSTALLED_APPS = [
     # shared
     "core.shared",
     # domains
-    "core.domains.products.adapters",
-    "core.domains.orders.adapters",
+    "core.domains.products.apps.ProductsConfig",
+    # "core.domains.orders.adapters",
 ]
 
 MIDDLEWARE = [

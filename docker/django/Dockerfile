@@ -1,60 +1,24 @@
-# # FROM python:3.12-slim
-
-# # ENV PYTHONDONTWRITEBYTECODE=1
-# # ENV PYTHONUNBUFFERED=1
-
-# # WORKDIR /app
-
-# # RUN apt-get update && apt-get install -y \
-# #     build-essential \
-# #     libpq-dev \
-# #     && rm -rf /var/lib/apt/lists/*
-
-# # COPY requirements.txt .
-# # RUN pip install --upgrade pip && pip install -r requirements.txt
-
-# # COPY . .
-
-# # RUN chmod +x /entrypoint.sh
-
-
-
-# FROM python:3.12-slim
-
-# ENV PYTHONDONTWRITEBYTECODE=1
-# ENV PYTHONUNBUFFERED=1
-
-# WORKDIR /app
-
-# RUN apt-get update && apt-get install -y \
-#     build-essential \
-#     libpq-dev \
-#     netcat-openbsd \
-#     && rm -rf /var/lib/apt/lists/*
-
-# COPY requirements.txt .
-# RUN pip install --upgrade pip && pip install -r requirements.txt
-
-# COPY . .
-
-# COPY docker/django/entrypoint.sh /entrypoint.sh
-# RUN chmod +x /entrypoint.sh
-
-# ENTRYPOINT ["/entrypoint.sh"]
-
-
-FROM python:3.11-slim
-
-WORKDIR /app
+#!/bin/sh
+FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . .
 
-RUN chmod +x /entrypoint.sh
+# 🚨 ENTRYPOINT MUST BE OUTSIDE /app (Codespaces noexec fix)
+COPY docker/django/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-CMD ["/entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
