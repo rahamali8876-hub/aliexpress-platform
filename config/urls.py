@@ -24,4 +24,5 @@ urlpatterns = [
     path(
         "api/v1/", include("core.domains.products.adapters.inbound.rest.product_urls")
     ),
+    path("", include("core.shared.infrastructure.health.urls")),
 ]

@@ -1,28 +1,50 @@
+# # from datetime import datetime
+# # import uuid
+
+# # class DomainEvent:
+# #     event_id = uuid.uuid4()
+
+# #     def __init__(self, aggregate_id):
+# #         self.aggregate_id = aggregate_id
+# #         self.occurred_at = datetime.utcnow()
+
+
+
+# from dataclasses import asdict
+# from uuid import UUID
 # from datetime import datetime
-# import uuid
+# from core.shared.utils.json_encoder.uuid_encoder import dumps
+
 
 # class DomainEvent:
-#     event_id = uuid.uuid4()
+#     @property
+#     def event_type(self) -> str:
+#         return self.__class__.__name__
 
-#     def __init__(self, aggregate_id):
-#         self.aggregate_id = aggregate_id
-#         self.occurred_at = datetime.utcnow()
+#     def to_payload(self) -> dict:
+#         return asdict(self)
+
+#     def to_json(self) -> str:
+#         return dumps(self.to_payload())
 
 
 
-from dataclasses import asdict
+from abc import ABC
+# from json import dumps
 from uuid import UUID
 from datetime import datetime
-from core.shared.utils.json_encoder.uuid_encoder import dumps
 
 
-class DomainEvent:
+class DomainEvent(ABC):
+    aggregate_id: UUID
+    occurred_at: datetime
+
     @property
     def event_type(self) -> str:
         return self.__class__.__name__
 
-    def to_payload(self) -> dict:
-        return asdict(self)
+    def to_primitives(self) -> dict:
+        raise NotImplementedError
 
-    def to_json(self) -> str:
-        return dumps(self.to_payload())
+    # def to_json(self) -> str:
+    #     return dumps(self.to_primitives())
