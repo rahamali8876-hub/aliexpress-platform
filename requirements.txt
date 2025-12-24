@@ -9,9 +9,14 @@ elastic-transport==9.2.0
 elasticsearch==9.2.0
 gunicorn==23.0.0
 idna==3.11
+iniconfig==2.3.0
 kafka-python==2.3.0
 packaging==25.0
+pluggy==1.6.0
+prometheus-client==0.23.1
 psycopg2-binary==2.9.11
+pygments==2.19.2
+pytest==9.0.2
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
 redis==7.1.0
