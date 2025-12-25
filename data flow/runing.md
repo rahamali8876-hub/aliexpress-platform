@@ -5,7 +5,14 @@
     Starting gunicorn...
 
 ###  docker compose up ( start all services )
+    docker compose \
+    -f docker-compose.yml \
+    -f docker-compose.observability.yml \
+    up -d
 
+
+
+### get into perticular service shell
     # Outbox
     docker compose exec api python manage.py process_outbox
 

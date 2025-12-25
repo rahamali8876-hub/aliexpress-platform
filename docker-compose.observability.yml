@@ -1,0 +1,45 @@
+# version: "3.9"
+
+# services:
+#   prometheus:
+#     image: prom/prometheus
+#     volumes:
+#       - ./core/observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+#       - ./core/observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+#       - ./core/observability/grafana/provisioning/plugins:/etc/grafana/provisioning/plugins
+#       - ./core/observability/grafana/provisioning/alerting:/etc/grafana/provisioning/alerting
+
+#     ports:
+#       - "9090:9090"
+
+#   grafana:
+#     image: grafana/grafana
+#     ports:
+#       - "3000:3000"
+#     volumes:
+#       - ./observability/grafana/dashboards:/var/lib/grafana/dashboards
+#       - ./observability/grafana/provisioning:/etc/grafana/provisioning
+#     depends_on:
+#       - prometheus
+
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: aliexpress_prometheus
+    volumes:
+      - ./core/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    container_name: aliexpress_grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./core/observability/grafana/provisioning:/etc/grafana/provisioning
+      - ./core/observability/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
