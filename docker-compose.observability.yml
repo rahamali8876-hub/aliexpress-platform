@@ -45,8 +45,6 @@
 
 
 
-version: "3.9"
-
 services:
   prometheus:
     image: prom/prometheus
@@ -55,14 +53,15 @@ services:
       - ./core/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.retention.time=7d"
       - "--web.enable-lifecycle"
 
     ports:
       - "9090:9090"
     networks:
-      - observability
+      # - observability
+      - aliexpress-platform_default
+      # - aliexpress-platform_observability
 
   grafana:
     image: grafana/grafana
@@ -75,8 +74,10 @@ services:
     depends_on:
       - prometheus
     networks:
-      - observability
+      # - observability
+      - aliexpress-platform_default
+      # - aliexpress-platform_observability
 
 networks:
-  observability:
+  aliexpress-platform_default:
     driver: bridge

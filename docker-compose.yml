@@ -1,10 +1,94 @@
+# services:
+#   api:
+#     build:
+#       context: .
+#       dockerfile: docker/django/Dockerfile
+#     container_name: aliexpress_api
+#     # command: /entrypoint.sh
+#     volumes:
+#       - .:/app
+#     ports:
+#       - "8000:8000"
+#     env_file:
+#       - .env
+#     depends_on:
+#       db:
+#         condition: service_healthy
+#       kafka:
+#         condition: service_healthy
+#       redis:
+#         condition: service_healthy
+#       # elasticsearch:
+#       #   condition: service_healthy
+#   db:
+#     image: postgres:15
+#     container_name: aliexpress_db
+#     environment:
+#       POSTGRES_DB: ${POSTGRES_DB}
+#       POSTGRES_USER: ${POSTGRES_USER}
+#       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+#     healthcheck:
+#       test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER" ]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+
+#   redis:
+#     image: redis:7
+#     container_name: aliexpress_redis
+#     healthcheck:
+#       test: [ "CMD", "redis-cli", "ping" ]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+
+#   zookeeper:
+#     image: confluentinc/cp-zookeeper:7.5.3
+#     container_name: aliexpress_zookeeper
+#     environment:
+#       ZOOKEEPER_CLIENT_PORT: 2181
+#       ZOOKEEPER_TICK_TIME: 2000
+#     # ❌ internal only
+#     # ports:
+#     #   - "2181:2181"
+
+#   kafka:
+#     image: confluentinc/cp-kafka:7.5.3
+#     container_name: aliexpress_kafka
+#     depends_on:
+#       - zookeeper
+#     environment:
+#       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+#       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+#     healthcheck:
+#       test: [ "CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list" ]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+
+#   elasticsearch:
+#     build:
+#       context: .
+#       dockerfile: docker/elasticsearch/Dockerfile
+#     container_name: aliexpress_elasticsearch
+#     environment:
+#       discovery.type: single-node
+#       ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+#     volumes:
+#       - es_data:/usr/share/elasticsearch/data
+#     ports:
+#       - "9200:9200" # optional (for curl / debugging)
+
+# volumes:
+#   postgres_data:
+#   es_data:
+
 services:
   api:
     build:
       context: .
       dockerfile: docker/django/Dockerfile
     container_name: aliexpress_api
-    # command: /entrypoint.sh
     volumes:
       - .:/app
     ports:
@@ -18,8 +102,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      # elasticsearch:
-      #   condition: service_healthy
+    networks:
+      - aliexpress-platform_default
+
   db:
     image: postgres:15
     container_name: aliexpress_db
@@ -28,19 +113,23 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER" ]
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - aliexpress-platform_default
 
   redis:
     image: redis:7
     container_name: aliexpress_redis
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - aliexpress-platform_default
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.3
@@ -48,9 +137,8 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-    # ❌ internal only
-    # ports:
-    #   - "2181:2181"
+    networks:
+      - aliexpress-platform_default
 
   kafka:
     image: confluentinc/cp-kafka:7.5.3
@@ -61,10 +149,19 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
     healthcheck:
-      test: [ "CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list" ]
+      test:
+        [
+          "CMD",
+          "kafka-topics",
+          "--bootstrap-server",
+          "localhost:9092",
+          "--list",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - aliexpress-platform_default
 
   elasticsearch:
     build:
@@ -77,8 +174,43 @@ services:
     volumes:
       - es_data:/usr/share/elasticsearch/data
     ports:
-      - "9200:9200" # optional (for curl / debugging)
+      - "9200:9200"
+    networks:
+      - aliexpress-platform_default
+
+  prometheus:
+    image: prom/prometheus
+    container_name: aliexpress_prometheus
+    volumes:
+      - ./core/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=7d"
+      - "--web.enable-lifecycle"
+    ports:
+      - "9090:9090"
+    depends_on:
+      - api
+    networks:
+      - aliexpress-platform_default
+
+  grafana:
+    image: grafana/grafana
+    container_name: aliexpress_grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./core/observability/grafana/provisioning:/etc/grafana/provisioning
+      - ./core/observability/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - aliexpress-platform_default
 
 volumes:
   postgres_data:
   es_data:
+
+networks:
+  aliexpress-platform_default:
+    driver: bridge

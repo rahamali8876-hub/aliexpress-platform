@@ -1,23 +1,3 @@
-# import requests
-# import time
-
-
-# url = "http://localhost:8000/api/v1/products/"
-# data = {
-#     "seller_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-#     "title": "Wireless Mouse",
-#     "price": 15.99,
-#     "stock": 100,
-# }
-# for index, _ in enumerate(range(1000)):
-#     start_time = time.time()
-#     response = requests.post(url, json=data)
-#     print(index, response.status_code, response)
-#     End_time = time.time()
-
-
-# print("Time taken:", End_time - start_time)
-
 
 import requests
 import time

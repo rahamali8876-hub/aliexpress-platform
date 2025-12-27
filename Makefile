@@ -64,6 +64,7 @@ observe:
 	$(COMPOSE) -f docker-compose.yml -f docker-compose.observability.yml up -d
 
 observe-up-build:
+# 	docker network create aliexpress-platform_observability || true
 	$(COMPOSE) -f docker-compose.yml -f docker-compose.observability.yml up -d --build
 
 ps:
@@ -79,12 +80,13 @@ up-build:
 	$(COMPOSE) up -d --build
 
 down:
-	$(COMPOSE) -f docker-compose.yml -f docker-compose.observability.yml down -v
+	$(COMPOSE) -f docker-compose.yml down -v
 # 	$(COMPOSE) -f docker-compose.yml -f docker-compose.observability.yml down -v
 
 restart:
 	$(COMPOSE) down
-	$(COMPOSE) up -d --build
+	$(COMPOSE) -f docker-compose.yml up -d --build
+# 	$(COMPOSE) -f docker-compose.yml -f docker-compose.observability.yml up -d --build
 
 stop:
 	$(COMPOSE) -f docker-compose.yml -f docker-compose.observability.yml stop
@@ -94,6 +96,12 @@ stop-api:
 
 stop-es:
 	$(DOCKER) stop aliexpress_elasticsearch
+
+stop-prometheus:
+	$(DOCKER) stop aliexpress_prometheus
+
+restart-prometheus:
+	$(DOCKER) restart aliexpress_prometheus	
 
 logs-api:
 	$(COMPOSE) logs -f $(SERVICE_API)

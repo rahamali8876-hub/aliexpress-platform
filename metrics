@@ -1,0 +1,71 @@
+# HELP python_gc_objects_collected_total Objects collected during gc
+# TYPE python_gc_objects_collected_total counter
+python_gc_objects_collected_total{generation="0"} 991.0
+python_gc_objects_collected_total{generation="1"} 144.0
+python_gc_objects_collected_total{generation="2"} 11.0
+# HELP python_gc_objects_uncollectable_total Uncollectable objects found during GC
+# TYPE python_gc_objects_uncollectable_total counter
+python_gc_objects_uncollectable_total{generation="0"} 0.0
+python_gc_objects_uncollectable_total{generation="1"} 0.0
+python_gc_objects_uncollectable_total{generation="2"} 0.0
+# HELP python_gc_collections_total Number of times this generation was collected
+# TYPE python_gc_collections_total counter
+python_gc_collections_total{generation="0"} 147.0
+python_gc_collections_total{generation="1"} 13.0
+python_gc_collections_total{generation="2"} 1.0
+# HELP python_info Python platform information
+# TYPE python_info gauge
+python_info{implementation="CPython",major="3",minor="12",patchlevel="12",version="3.12.12"} 1.0
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 1.04288256e+08
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes 6.039552e+07
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.76682649112e+09
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 0.69
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds 11.0
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds 1024.0
+# HELP events_processed_total Total events processed
+# TYPE events_processed_total counter
+# HELP event_processing_seconds Event processing time
+# TYPE event_processing_seconds histogram
+# HELP event_failures_total Total failed events
+# TYPE event_failures_total counter
+# HELP products_created_total Total number of products created
+# TYPE products_created_total counter
+products_created_total 0.0
+# HELP products_created_created Total number of products created
+# TYPE products_created_created gauge
+products_created_created 1.766826612255121e+09
+# HELP products_published_total Total number of products published
+# TYPE products_published_total counter
+products_published_total 0.0
+# HELP products_published_created Total number of products published
+# TYPE products_published_created gauge
+products_published_created 1.7668266122551315e+09
+# HELP orders_created_total Total number of orders created
+# TYPE orders_created_total counter
+orders_created_total 0.0
+# HELP orders_created_created Total number of orders created
+# TYPE orders_created_created gauge
+orders_created_created 1.7668266122551403e+09
+# HELP orders_failed_total Total number of failed orders
+# TYPE orders_failed_total counter
+orders_failed_total 0.0
+# HELP orders_failed_created Total number of failed orders
+# TYPE orders_failed_created gauge
+orders_failed_created 1.7668266122551472e+09
+# HELP api_request_latency_seconds API request latency
+# TYPE api_request_latency_seconds histogram
+# HELP outbox_pending_events Number of events waiting in outbox
+# TYPE outbox_pending_events gauge
+outbox_pending_events 0.0
