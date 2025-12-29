@@ -104,6 +104,9 @@ stop-prometheus:
 restart-prometheus:
 	$(DOCKER) restart aliexpress_prometheus	
 
+restart-api:
+	$(DOCKER) restart api
+
 logs-api:
 	$(COMPOSE) logs -f $(SERVICE_API)
 

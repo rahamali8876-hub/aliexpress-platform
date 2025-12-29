@@ -36,7 +36,7 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "0.0.0.0",
     "aliexpress_api",
-    'api',  # for docker-compose service name
+    "api",  # for docker-compose service name
 ]  # 👈 THIS IS MANDATORY
 
 
@@ -98,7 +98,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+# BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 load_dotenv(BASE_DIR / ".env")
 
@@ -153,8 +153,9 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = "/static/"
 
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
+# STATIC_ROOT = BASE_DIR / "staticfiles"
+# STATICFILES_DIRS = [
+#     BASE_DIR / "static",
+# ]
