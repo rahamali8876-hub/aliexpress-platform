@@ -36,12 +36,16 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "0.0.0.0",
     "aliexpress_api",
+    'api',  # for docker-compose service name
 ]  # 👈 THIS IS MANDATORY
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    # premetheus_app := "prometheus_client.django",
+    "django_prometheus",
+    #  premetheus_app end here  👆
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -63,6 +67,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",  # 👈 THIS IS MANDATORY
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -70,6 +75,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",  # 👈 THIS IS MANDATORY
 ]
 
 ROOT_URLCONF = "config.urls"
