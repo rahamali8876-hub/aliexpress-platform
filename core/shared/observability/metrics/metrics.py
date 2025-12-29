@@ -1,5 +1,5 @@
-# filename : core/shared/observability/metrics.py
-# from prometheus_client import Counter, Histogram
+# filename : core/shared/observability/metrics/metrics.py
+
 from prometheus_client import Counter, Histogram, Gauge
 
 EVENTS_PROCESSED = Counter(

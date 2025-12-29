@@ -1,21 +1,4 @@
-# import json
-# from kafka import KafkaProducer
-# from django.conf import settings
-
-# _producer = None
-
-
-# def get_kafka_producer():
-#     global _producer
-
-#     if _producer is None:
-#         _producer = KafkaProducer(
-#             bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
-#             value_serializer=lambda v: json.dumps(v).encode("utf-8"),
-#             retries=5,
-#         )
-
-#     return _producer
+# filename : core/shared/infrastructure/message_broker.py
 
 
 import json
@@ -50,3 +33,9 @@ def get_kafka_producer():
             time.sleep(delay)
 
     return _producer
+
+
+def publish_event(topic: str, event: dict):
+    producer = get_kafka_producer()
+    producer.send(topic, event)
+    producer.flush()

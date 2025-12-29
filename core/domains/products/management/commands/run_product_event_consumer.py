@@ -1,5 +1,5 @@
-from django.core.management.base import BaseCommand
-from core.domains.products.adapters.inbound.consumer.product_search_consumer import (
+git from django.core.management.base import BaseCommand
+from core.domains.products.adapters.inbound.consumer.product_event_consumer import (
     run_product_search_consumer,
 )
 

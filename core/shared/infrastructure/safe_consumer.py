@@ -61,9 +61,11 @@ from core.shared.infrastructure.retry_policy import (
     should_retry,
     increment_retry,
 )
-from core.shared.infrastructure.kafka_producer import publish_event
+
+# from core.shared.infrastructure.kafka_producer import publish_event
+from core.shared.infrastructure.message_broker import publish_event
 from core.shared.infrastructure.dlq_producer import send_to_dlq
-from core.shared.infrastructure.metrics import (
+from core.shared.observability.metrics.metrics import (
     EVENTS_PROCESSED,
     EVENT_PROCESSING_TIME,
     EVENT_FAILURES,

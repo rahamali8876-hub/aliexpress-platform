@@ -1,5 +1,9 @@
+# # filename : core/domains/products/adapters/inbound/consumer/product_search_consumer.py
+
 # from core.shared.infrastructure.kafka_consumer import create_consumer
 # from core.shared.infrastructure.safe_consumer import safe_handle_event
+# from core.shared.infrastructure.logging import get_logger
+# from core.shared.infrastructure.tracing import start_span
 # from core.domains.products.read_model.projections.product_search_projection import (
 #     ProductSearchProjection,
 # )
@@ -7,27 +11,26 @@
 # TOPICS = ["product.created", "product.updated", "product.deleted"]
 # GROUP_ID = "product-search-consumer"
 
+# logger = get_logger("product-search-consumer")
 # projection = ProductSearchProjection()
 
 
 # def handle_product_event(event: dict):
 #     event_type = event["type"]
 
-#     if event_type in ("product.created", "product.updated"):
-#         projection.index(event["payload"])
-
-#     elif event_type == "product.deleted":
-#         projection.delete(event["aggregate_id"])
-
 #     with start_span("product_search_projection"):
-#         projection.index(event["payload"])
+#         if event_type in ("product.created", "product.updated"):
+#             projection.index(event["payload"])
+
+#         elif event_type == "product.deleted":
+#             projection.delete(event["aggregate_id"])
 
 #     logger.info(
 #         "processing_event",
 #         extra={
-#             "event_type": event["type"],
+#             "event_type": event_type,
 #             "aggregate_id": event["aggregate_id"],
-#             "retry_count": event["retry_count"],
+#             "retry_count": event.get("retry_count", 0),
 #         },
 #     )
 
@@ -40,33 +43,11 @@
 #             event=message.value,
 #             topic=message.topic,
 #             handler_fn=handle_product_event,
+#             consumer_name="product-search-consumer",
 #         )
 #         consumer.commit()
 
-
-# below is new code base and above is old code base
-
-# from core.shared.infrastructure.logging import get_logger
-# from core.shared.infrastructure.tracing import start_span
-
-# logger = get_logger("product-search-consumer")
-
-
-# def handle_product_event(event):
-#     with start_span("product_search_projection"):
-#         projection.index(event["payload"])
-
-#     logger.info(
-#         "processing_event",
-#         extra={
-#             "event_type": event["type"],
-#             "aggregate_id": event["aggregate_id"],
-#             "retry_count": event["retry_count"],
-#         },
-#     )
-
-#     # projection logic
-
+# filename : core/domains/products/adapters/inbound/consumer/product_search_consumer.py
 
 from core.shared.infrastructure.kafka_consumer import create_consumer
 from core.shared.infrastructure.safe_consumer import safe_handle_event
@@ -103,7 +84,7 @@ def handle_product_event(event: dict):
     )
 
 
-def run_product_search_consumer():
+def run_product_event_consumer():
     consumer = create_consumer(TOPICS, GROUP_ID)
 
     for message in consumer:
@@ -114,3 +95,18 @@ def run_product_search_consumer():
             consumer_name="product-search-consumer",
         )
         consumer.commit()
+
+
+# # below is newcodebase above is old codebase
+
+# from core.shared.infrastructure.kafka_consumer import create_consumer
+
+# def run_product_event_consumer():
+#     consumer = create_consumer(
+#         topics=["product.created"],
+#         group_id="debug-product-consumer",
+#     )
+
+#     for message in consumer:
+#         print("EVENT RECEIVED:", message.value)
+#         consumer.commit()
