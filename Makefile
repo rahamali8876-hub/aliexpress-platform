@@ -61,11 +61,12 @@ help:
 # Infrastructure
 # -------------------------------
 observe:
-	$(COMPOSE) -f docker-compose.yml -f docker-compose.observability.yml up -d
+# 	$(COMPOSE) -f docker-compose.yml -f docker-compose.observability.yml up -d
+	$(COMPOSE) -f docker-compose.yml up -d
 
 observe-up-build:
-# 	docker network create aliexpress-platform_observability || true
-	$(COMPOSE) -f docker-compose.yml -f docker-compose.observability.yml up -d --build
+# 	$(COMPOSE) -f docker-compose.yml -f docker-compose.observability.yml up -d --build
+	$(COMPOSE) -f docker-compose.yml up -d --build
 
 ps:
 	$(COMPOSE) ps

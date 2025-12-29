@@ -47,6 +47,8 @@ core/
         │   ├── outbox_processor.py
         │   ├── cache_manager.py
         │   └── logger.py
+                        /events
+                            event_envelope.py
         │
         └── utils/
             ├── datetime_utils.py
@@ -66,7 +68,7 @@ docker/
         Dockerfile
     redis/
         Dockerfile
-    elestic-search/
+    elasticsearch/
         Dockerfile
 ### PRODUCTS DOMAIN — HOLY GRAIL STRUCTURE
     └── domains/
@@ -247,7 +249,27 @@ core/domains/products/
 │   │
 │   └── outbox/
 │       └── test_product_outbox.py
+🔁 APPLY THIS TEMPLATE TO EVERY DOMAIN
 
+You now reuse this exact depth for:
+
+✅ Payments
+
+✅ Inventory
+
+✅ Checkout
+
+✅ Shipping
+
+✅ Coupons
+
+✅ Accounts
+
+✅ Notifications
+
+✅ Search (read-model heavy)
+
+Only names change, structure stays.
 
 
 ### ORDERS DOMAIN — HOLY GRAIL STRUCTURE
