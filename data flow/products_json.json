@@ -23,7 +23,6 @@ uv run ./manage.py showmigrations
   
 
 {
-  "product_id": "550e8400-e29b-41d4-a716-446655440002",
   "seller_id": "123e4567-e89b-12d3-a456-426614174000",
   "title": "USB-C Hub",
   "price": 29.99,

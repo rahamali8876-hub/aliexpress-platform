@@ -60,7 +60,7 @@ INSTALLED_APPS = [
     # "core.domains.payments.apps.PaymentsConfig",
     # "core.domains.shipping.apps.ShippingConfig",
     # shared
-    "core.shared",
+    "core.shared.apps.SharedConfig",
     # domains
     "core.domains.products.apps.ProductsConfig",
     # "core.domains.orders.adapters",
@@ -115,7 +115,16 @@ DATABASES = {
 
 
 REDIS_URL = "redis://redis:6379/0"
-KAFKA_BOOTSTRAP_SERVERS = ["kafka:9092"]
+# KAFKA_BOOTSTRAP_SERVERS = ["kafka:9092"]
+# settings.py
+# KAFKA_BOOTSTRAP_SERVERS = ["localhost:29092"]
+# import os
+
+KAFKA_BOOTSTRAP_SERVERS = os.environ.get(
+    "KAFKA_BOOTSTRAP_SERVERS",
+    "localhost:29092",  # default for host
+)
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators

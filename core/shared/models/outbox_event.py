@@ -1,3 +1,4 @@
+# filename : core/shared/models/outbox_event.py
 from django.db import models
 import uuid
 
