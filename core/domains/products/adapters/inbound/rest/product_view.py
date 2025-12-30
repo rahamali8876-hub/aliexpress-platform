@@ -22,6 +22,24 @@ from core.domains.products.adapters.inbound.rest.product_serializer import (
 )
 
 
+# class CreateProductView(APIView):
+#     def post(self, request):
+#         serializer = CreateProductSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+
+#         handler = CreateProductHandler(
+#             repository=ProductRepositoryImpl(),
+#             event_publisher=ProductEventPublisher(),
+#         )
+
+#         command = CreateProductCommand(**serializer.validated_data)
+#         # handler.handle(command)
+#         aggregate = handler.handle(command)
+
+#         return Response(
+#             {"product_id": str(aggregate.id)}, status=status.HTTP_201_CREATED
+#         )
+
 class CreateProductView(APIView):
     def post(self, request):
         serializer = CreateProductSerializer(data=request.data)
@@ -29,13 +47,12 @@ class CreateProductView(APIView):
 
         handler = CreateProductHandler(
             repository=ProductRepositoryImpl(),
-            event_publisher=ProductEventPublisher(),
         )
 
         command = CreateProductCommand(**serializer.validated_data)
-        # handler.handle(command)
         aggregate = handler.handle(command)
 
         return Response(
-            {"product_id": str(aggregate.id)}, status=status.HTTP_201_CREATED
+            {"product_id": str(aggregate.id)},
+            status=status.HTTP_201_CREATED,
         )

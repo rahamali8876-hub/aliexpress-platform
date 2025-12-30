@@ -1,3 +1,5 @@
+# filename : core/shared/infrastructure/kafka_consumer.py
+
 from kafka import KafkaConsumer
 import json
 from django.conf import settings

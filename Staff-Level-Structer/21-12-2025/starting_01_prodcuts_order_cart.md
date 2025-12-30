@@ -132,8 +132,7 @@ It will be copy-pasteable and act as your single reference blueprint.
                    │                            │
                    │ Compensation on failure    │
                    └────────────────────────────┘
-
-🔑 GOLDEN RULES (MEMORIZE)
+### 🔑 GOLDEN RULES (MEMORIZE)
 API        → commands
 DB         → truth
 Outbox     → guarantee
@@ -141,6 +140,21 @@ Kafka      → facts
 Consumers  → reactions
 Read Model → speed
 Saga       → coordination
+
+HTTP Request
+   ↓
+Service Layer
+   ↓
+DB Transaction
+   ├─ Product.objects.create(...)
+   └─ OutboxEvent.objects.create(...)   ← YOU ARE MISSING THIS
+   ↓
+Commit
+   ↓
+process_outbox
+   ↓
+Kafka
+
 
 
 ### 🏆 HOLY GRAIL BLUEPRINT — ALIEXPRESS CLONE

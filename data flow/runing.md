@@ -18,3 +18,12 @@
 
     # Outbox
     docker compose exec api python manage.py process_outbox
+
+docker compose exec api python manage.py makemigrations shared
+docker compose exec api python manage.py migrate
+
+
+docker exec -it aliexpress_kafka kafka-console-consumer \
+  --bootstrap-server localhost:9092 \
+  --topic product.created \
+  --from-beginning

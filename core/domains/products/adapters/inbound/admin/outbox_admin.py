@@ -1,14 +1,5 @@
-# from django.contrib import admin
-# from core.domains.products.outbox.product_outbox_model import ProductOutbox
 
-
-# @admin.register(ProductOutbox)
-# class ProductOutboxAdmin(admin.ModelAdmin):
-#     list_display = ("id", "aggregate_id", "event_type", "status", "created_at")
-#     list_filter = ("status", "event_type")
-#     readonly_fields = ("id", "aggregate_id", "event_type", "payload", "created_at")
-
-
+# filename : core/domains/products/adapters/inbound/admin/outbox_admin.py
 from django.contrib import admin
 from core.domains.products.outbox.product_outbox_model import ProductOutbox
 

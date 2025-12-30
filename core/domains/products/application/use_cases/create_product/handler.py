@@ -1,27 +1,40 @@
-# filename : core/domains/products/application/use_cases/create_product/handler.py
+
+# filename: core/domains/products/application/use_cases/create_product/handler.py
 
 import uuid
+from django.db import transaction
 from core.domains.products.domain.aggregates.product_aggregate import ProductAggregate
+from core.shared.models import OutboxEvent
 from core.shared.observability.metrics.metrics import products_created_total
 
 
 class CreateProductHandler:
-    def __init__(self, repository, event_publisher):
+    def __init__(self, repository):
         self.repository = repository
-        self.event_publisher = event_publisher
 
     def handle(self, command):
-        product_id = uuid.uuid4()  # ✅ SYSTEM GENERATES ID
+        product_id = uuid.uuid4()
 
-        aggregate = ProductAggregate.create(
-            product_id=product_id,
-            seller_id=command.seller_id,
-            title=command.title,
-        )
+        with transaction.atomic():
+            # 1️⃣ Create aggregate
+            aggregate = ProductAggregate.create(
+                product_id=product_id,
+                seller_id=command.seller_id,
+                title=command.title,
+            )
 
-        self.repository.save(aggregate)
-        self.event_publisher.publish_all(aggregate.pull_events())
-        # sending metrics to prometheus
-        products_created_total.inc()  # 👈 THIS IS THE KEY
+            # 2️⃣ Persist aggregate
+            self.repository.save(aggregate)
 
-        return aggregate  # optional but useful
+            # 3️⃣ Persist domain events into OUTBOX (NOT Kafka)
+            for event in aggregate.pull_events():
+                OutboxEvent.objects.create(
+                    aggregate_id=product_id,
+                    event_type=event.event_type,
+                    payload=event.to_dict(),
+                )
+
+            # 4️⃣ Metrics are SAFE here
+            products_created_total.inc()
+
+        return aggregate
