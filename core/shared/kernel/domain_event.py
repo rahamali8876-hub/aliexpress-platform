@@ -28,7 +28,7 @@
 #         return dumps(self.to_payload())
 
 
-
+# filename : core/shared/kernel/domain_event.py
 from abc import ABC
 # from json import dumps
 from uuid import UUID

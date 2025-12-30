@@ -113,6 +113,10 @@ logs-api:
 logs-db:
 	$(COMPOSE) logs -f $(SERVICE_DB)
 
+logs-kafka:
+	$(COMPOSE) logs -f aliexpress_kafka
+
+
 shell:
 	$(COMPOSE) exec $(SERVICE_API) bash
 

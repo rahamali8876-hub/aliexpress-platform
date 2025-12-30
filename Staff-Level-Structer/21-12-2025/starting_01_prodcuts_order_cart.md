@@ -166,43 +166,97 @@ i want like does this 100% valid then only i use this
 aliexpress-clone-holy-grail/
 1️⃣ ROOT FOLDER STRUCTURE
 aliexpress-platform/
+
 ### Products Domain
 core/
-    shared/
-        ├── kernel/                      # CORE UTILITIES
-        │   ├── base_entity.py
-        │   ├── base_aggregate.py
-        │   ├── base_value_object.py
-        │   ├── domain_event.py
-        │   ├── domain_service.py
-        │   ├── policy.py
-        │   └── exceptions.py
-        │
-        ├── infrastructure/               # CROSS-CUTTING CONCERNS
-        │   ├── event_bus.py
-        │   ├── message_broker.py
-        │   ├── outbox_processor.py
-        │   ├── cache_manager.py
-        │   └── logger.py
-                        /events
-                            event_envelope.py
-            ├── message_broker.py        ✅ Kafka PRODUCER (single source)
-            ├── kafka_consumer.py        ✅ Kafka CONSUMER factory
-            ├── safe_consumer.py         ✅ Retry / DLQ wrapper
-            ├── outbox_processor.py      ✅ DB → Kafka
-            ├── elasticsearch_client.py
-            ├── logging.py
-            └── tracing.py
+└── shared/
+    │
+    ├── kernel/                         # PURE DDD KERNEL (NO DJANGO)
+    │   │
+    │   ├── base_entity.py              # Entity base (id, equality)
+    │   ├── base_aggregate.py           # AggregateRoot + domain events
+    │   ├── base_value_object.py        # Immutable value objects
+    │   ├── domain_event.py             # Base DomainEvent class
+    │   ├── domain_service.py           # Stateless domain services
+    │   ├── policy.py                   # Business policies base
+    │   └── exceptions.py               # Domain-level exceptions
+    │
+    │   # ❗ RULE:
+    │   # - No Django
+    │   # - No Kafka
+    │   # - No DB
+    │   # - Importable by ALL domains
+    │
+    ├── infrastructure/                 # TECHNICAL IMPLEMENTATIONS
+    │   │
+    │   ├── messaging/                  # EVENT DELIVERY (ASYNC)
+    │   │   │
+    │   │   ├── message_broker.py       # ✅ Kafka PRODUCER (single source)
+    │   │   ├── kafka_consumer.py       # KafkaConsumer factory
+    │   │   ├── safe_consumer.py        # Retry / DLQ / backoff wrapper
+    │   │   ├── outbox_processor.py     # DB → Kafka publisher
+    │   │   └── event_envelope.py       # Standard event format
+    │   │
+    │   │   # ❗ RULE:
+    │   │   # - Kafka lives ONLY here
+    │   │   # - Domains NEVER import Kafka directly
+    │   │
+    │   ├── persistence/                # DB-RELATED INFRA
+    │   │   │
+    │   │   ├── outbox_models.py        # OutboxEvent (shared table)
+    │   │   └── transaction_utils.py    # atomic helpers
+    │   │
+    │   ├── cache/                      # REDIS / CACHE
+    │   │   │
+    │   │   ├── cache_manager.py        # Redis abstraction
+    │   │   └── cache_keys.py           # Shared cache key rules
+    │   │
+    │   ├── search/                     # ELASTICSEARCH
+    │   │   │
+    │   │   └── elasticsearch_client.py
+    │   │
+    │   ├── logging.py                  # Structured logging setup
+    │   ├── tracing.py                 # OpenTelemetry tracing
+    │   └── timeouts.py                # Infra timeouts / retries
+    │
+    ├── observability/                  # VISIBILITY (OPS)
+    │   │
+    │   ├── logging/
+    │   │   ├── formatters.py           # JSON / structured logs
+    │   │   └── filters.py
+    │   │
+    │   ├── tracing/
+    │   │   ├── tracer.py               # Span helpers
+    │   │   └── middleware.py
+    │   │
+    │   └── metrics/
+    │       ├── prometheus.py           # Registry
+    │       └── counters.py             # Shared counters
+    │
+    ├── utils/                          # GENERIC HELPERS
+    │   │
+    │   ├── datetime_utils.py           # Time helpers
+    │   ├── id_generator.py             # UUID / snowflake
+    │   └── validation_utils.py         # Shared validation
+    │
+    ├── admin/                          # DJANGO ADMIN (OPS TOOLING)
+    │   │
+    │   └── outbox_admin.py             # OutboxEvent admin UI
+    │
+    ├── models/                         # ✅ SHARED DJANGO MODELS
+    │   │
+    │   ├── __init__.py
+    │   └── outbox_event.py             # OutboxEvent (single source)
+    │
+    ├── management/
+    │   │
+    │   └── commands/
+    │       └── process_outbox.py       # Runs OutboxProcessor
+    │
+    ├── apps.py                         # SharedConfig
+    └── __init__.py
 
-        │
-        └── utils/
-            ├── datetime_utils.py
-            ├── id_generator.py
-            └── validation_utils.py
-        ├── observability/          # LOGS, METRICS, TRACING
-        │   ├── logging/
-        │   ├── tracing/
-        │   └── metrics/
+
 docker/
     django/
         Dockerfile

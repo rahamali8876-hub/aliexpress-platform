@@ -36,7 +36,7 @@ class ProductCreated(DomainEvent):
     title: str
     occurred_at: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> dict:
+    def to_primitives(self) -> dict:
         return {
             "product_id": str(self.aggregate_id),
             "seller_id": str(self.seller_id),
