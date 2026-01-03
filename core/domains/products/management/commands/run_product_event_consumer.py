@@ -1,3 +1,4 @@
+# filename : core/domains/products/management/commands/run_product_event_consumer.py
 from django.core.management.base import BaseCommand
 # from core.domains.products.adapters.inbound.consumer.product_event_consumer import (
 #     run_product_search_consumer,

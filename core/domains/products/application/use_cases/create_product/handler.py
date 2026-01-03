@@ -30,6 +30,7 @@ class CreateProductHandler:
                 OutboxEvent.objects.create(
                     aggregate_id=product_id,
                     event_type=event.event_type,
+                    event_version=event.event_version,  # ✅ NEW
                     payload=event.to_primitives(),  # ✅ must use to_primitives()
                 )
 

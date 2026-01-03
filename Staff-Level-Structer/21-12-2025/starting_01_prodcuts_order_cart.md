@@ -180,6 +180,8 @@ core/
     │   ├── domain_service.py           # Stateless domain services
     │   ├── policy.py                   # Business policies base
     │   └── exceptions.py               # Domain-level exceptions
+            topics.py                     # Event topics mapping
+            event_routing.py               # Event → topic routing
     │
     │   # ❗ RULE:
     │   # - No Django
@@ -196,6 +198,7 @@ core/
     │   │   ├── safe_consumer.py        # Retry / DLQ / backoff wrapper
     │   │   ├── outbox_processor.py     # DB → Kafka publisher
     │   │   └── event_envelope.py       # Standard event format
+
     │   │
     │   │   # ❗ RULE:
     │   │   # - Kafka lives ONLY here

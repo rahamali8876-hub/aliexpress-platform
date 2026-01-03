@@ -47,7 +47,7 @@ class OutboxEvent(models.Model):
     aggregate_type = models.CharField(max_length=100)
 
     event_type = models.CharField(max_length=255)
-    version = models.PositiveIntegerField(default=1)
+    event_version = models.PositiveIntegerField(default=1)
 
     payload = models.JSONField()
 
@@ -63,3 +63,19 @@ class OutboxEvent(models.Model):
             models.Index(fields=["status", "created_at"]),
             models.Index(fields=["event_type"]),
         ]
+
+
+# from django.db import models
+
+
+# class OutboxEvent(models.Model):
+#     aggregate_id = models.UUIDField()
+#     event_type = models.CharField(max_length=100)
+#     event_version = models.PositiveIntegerField()  # ✅ NEW
+#     payload = models.JSONField()
+
+#     status = models.CharField(max_length=20, default="PENDING")
+#     retry_count = models.PositiveIntegerField(default=0)
+
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     published_at = models.DateTimeField(null=True, blank=True)

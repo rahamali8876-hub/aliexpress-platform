@@ -29,11 +29,11 @@ class OutboxEventAdmin(admin.ModelAdmin):
         "retry_count",
     )
 
-    def has_add_permission(self, request):
-        return False  # ❌ Outbox is append-only
+    # def has_add_permission(self, request):
+    #     return False  # ❌ Outbox is append-only
 
-    def has_delete_permission(self, request, obj=None):
-        return False  # ❌ Never delete events
+    # def has_delete_permission(self, request, obj=None):
+    #     return False  # ❌ Never delete events
 
     @admin.action(description="Requeue failed events (mark as PENDING)")
     def mark_as_pending(self, request, queryset):

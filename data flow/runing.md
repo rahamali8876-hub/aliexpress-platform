@@ -31,6 +31,13 @@ docker exec -it aliexpress_kafka kafka-console-consumer \
   --from-beginning
 
 
+docker exec -it aliexpress_kafka \
+kafka-console-consumer \
+--bootstrap-server localhost:9092 \
+--topic product.events \
+--from-beginning
+
+
 
 
 

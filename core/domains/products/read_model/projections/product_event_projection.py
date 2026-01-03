@@ -2,7 +2,7 @@
 from core.shared.infrastructure.elasticsearch_client import get_es_client
 
 
-class ProductSearchProjection:
+class ProductEventProjection:
     INDEX = "product_search"
 
     def index(self, product):

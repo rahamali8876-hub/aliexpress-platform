@@ -10,12 +10,14 @@ def build_event_envelope(outbox_event):
     Infra-only. Domains must never import this.
     """
     print(  # Debugging purposes
-        "Building event envelope for OutboxEvent ID:", outbox_event.event_type
+        "Building event envelope for OutboxEvent ID: filename : core/shared/infrastructure/messaging/event_envelope.py : ",
+        outbox_event.event_type,
     )
     return {
         "event_id": str(outbox_event.id),
         "event_type": outbox_event.event_type,  # e.g. product.created
-        "event_version": outbox_event.version,
+        # "event_version": outbox_event.version,
+        "event_version": outbox_event.event_version,  # ✅ INCLUDED
         "aggregate_type": outbox_event.aggregate_type,
         "aggregate_id": str(outbox_event.aggregate_id),
         "occurred_at": outbox_event.created_at.isoformat(),
