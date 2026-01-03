@@ -1,0 +1,32 @@
+{
+    "type": "object",
+    "required": [
+        "event_id",
+        "event_type",
+        "version",
+        "occurred_at",
+        "payload"
+    ],
+    "properties": {
+        "event_id": {
+            "type": "string"
+        },
+        "event_type": {
+            "type": "string"
+        },
+        "version": {
+            "type": "integer"
+        },
+        "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "payload": {
+            "type": "object"
+        },
+        "metadata": {
+            "type": "object",
+            "additionalProperties": true
+        }
+    }
+}

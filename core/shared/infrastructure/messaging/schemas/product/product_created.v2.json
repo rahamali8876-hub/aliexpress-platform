@@ -1,0 +1,22 @@
+{
+    "type": "object",
+    "required": [
+        "product_id",
+        "title",
+        "seller_id"
+    ],
+    "properties": {
+        "product_id": {
+            "type": "string"
+        },
+        "title": {
+            "type": "string"
+        },
+        "seller_id": {
+            "type": "string"
+        },
+        "category_id": {
+            "type": "string"
+        }
+    }
+}
