@@ -14,18 +14,3 @@ def create_consumer(topics, group_id):
         value_deserializer=lambda v: json.loads(v.decode("utf-8")),
         auto_offset_reset="earliest",
     )
-
-
-# from kafka import KafkaConsumer
-# import json
-
-
-# def build_consumer(topic: str, group_id: str):
-#     return KafkaConsumer(
-#         topic,
-#         bootstrap_servers="kafka:9092",
-#         group_id=group_id,
-#         auto_offset_reset="earliest",
-#         enable_auto_commit=True,
-#         value_deserializer=lambda m: json.loads(m.decode("utf-8")),
-#     )

@@ -6,6 +6,10 @@ import time
 from kafka import KafkaProducer
 from kafka.errors import NoBrokersAvailable
 from django.conf import settings
+import logging
+
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
 
 _producer = None
 
@@ -16,7 +20,7 @@ def get_kafka_producer():
     if _producer:
         return _producer
 
-    retries = 10
+    retries = 5
     delay = 3  # seconds
 
     for attempt in range(retries):
@@ -25,6 +29,11 @@ def get_kafka_producer():
                 bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
                 value_serializer=lambda v: json.dumps(v).encode("utf-8"),
                 retries=5,
+            )
+            logging.info(
+                "Kafka producer connected to %s",
+                settings.KAFKA_BOOTSTRAP_SERVERS,
+                filename="core/shared/infrastructure/messaging/message_broker.py",
             )
             return _producer
         except NoBrokersAvailable:

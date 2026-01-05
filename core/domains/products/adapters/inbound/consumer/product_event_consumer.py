@@ -1,5 +1,6 @@
 # filename : core/domains/products/adapters/inbound/consumer/product_event_consumer.py
 
+import logging
 from core.shared.infrastructure.messaging.kafka_consumer import create_consumer
 from core.shared.infrastructure.safe_consumer import safe_handle_event
 from core.shared.infrastructure.logging import get_logger
@@ -18,11 +19,15 @@ projection = ProductEventProjection()
 def handle_product_event(event: dict):
     event_type = event["event_type"]
 
-    with start_span("product_search_projection"):
+    with start_span("product_event_projection"):
         if event_type in ("product.created", "product.updated"):
-            print(
-                "Debugging: Indexing event payload:", event["payload"]
-            )  # Debugging purposes
+            logging.info(
+                "indexing_product",
+                extra={
+                    "aggregate_id": event["aggregate_id"],
+                },
+                filename="core/domains/products/adapters/inbound/consumer/product_event_consumer.py",
+            )
             projection.index(event["payload"])
 
         elif event_type == "product.deleted":
@@ -34,6 +39,7 @@ def handle_product_event(event: dict):
             "event_type": event_type,
             "aggregate_id": event["aggregate_id"],
         },
+        filename="core/domains/products/adapters/inbound/consumer/product_event_consumer.py",
     )
 
 
