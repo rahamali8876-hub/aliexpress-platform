@@ -1,77 +1,94 @@
-# filename : core/shared/infrastructure/messaging/outbox_processor.py
+# filename: core/shared/infrastructure/messaging/outbox_processor.py
+
 import logging
 from django.db import transaction
 from django.utils import timezone
 
 from core.shared.models.outbox_event import OutboxEvent
 from core.shared.infrastructure.messaging.event_envelope import build_event_envelope
-from core.shared.infrastructure.messaging.event_routing import EVENT_TOPIC_MAP
+from core.shared.infrastructure.messaging.event_routing import route_event
+
+# from core.shared.observability.metrics.prometheus import (
+#     EVENTS_PROCESSED_COUNTER,
+#     EVENTS_FAILED_COUNTER,
+#     EVENTS_RETRY_COUNTER,
+# )
+from core.shared.observability.metrics.metrics import (
+    EVENTS_PROCESSED_COUNTER,
+    EVENTS_FAILED_COUNTER,
+    EVENTS_RETRY_COUNTER,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class OutboxProcessor:
-    MAX_RETRIES = 5
+    """
+    Low-level Outbox → Kafka publisher.
+    Should be used by OutboxPublisher only.
+    """
 
-    def __init__(self, producer):
+    def __init__(self, producer, max_retries: int = 5):
         self.producer = producer
-
-    def process_batch(self, batch_size: int = 50):
-        with transaction.atomic():
-            events = list(
-                OutboxEvent.objects.select_for_update(skip_locked=True)
-                .filter(status="PENDING", retry_count__lt=self.MAX_RETRIES)
-                .order_by("created_at")[:batch_size]
-            )
-
-        for event in events:
-            self._publish_event(event)
+        self.max_retries = max_retries
 
     def _publish_event(self, event: OutboxEvent):
+        """
+        Publish a single OutboxEvent safely:
+
+        - Wraps payload in envelope
+        - Routes to correct Kafka topic
+        - Sends with aggregate_id key for ordering
+        - Waits for ACK before marking PUBLISHED
+        - Handles retries and failure
+        """
         try:
             envelope = build_event_envelope(event)
 
-            try:
-                topic = EVENT_TOPIC_MAP[event.event_type]
-            except KeyError:
-                raise RuntimeError(
-                    f"No Kafka topic defined for event type: {event.event_type}"
-                )
+            # Route to Kafka topic
+            topic = route_event(event.event_type)
 
-            # self.producer.send(topic=topic, value=envelope)
-            # self.producer.flush()
-            future = self.producer.send(topic=topic, value=envelope)
-            print(
-                " future.get taking time .................", future.get(timeout=10)
-            )  # FORCE ACK
+            # Send with key = aggregate_id (ensures ordering)
+            future = self.producer.send(
+                topic=topic,
+                key=str(event.aggregate_id).encode("utf-8"),
+                value=envelope,
+            )
+
+            # Force ACK (exactly-once)
+            future.get(timeout=10)
+
+            # ✅ Update Outbox atomically
+            updated = OutboxEvent.objects.filter(id=event.id, status="PENDING").update(
+                status="PUBLISHED", published_at=timezone.now()
+            )
+
+            if updated == 0:
+                logger.warning("Outbox event already processed: %s", event.id)
+
+            # Metrics
+            EVENTS_PROCESSED_COUNTER.inc()
 
             logger.info(
-                "Event published",
+                "Outbox event published",
                 extra={
                     "event_id": event.id,
+                    "aggregate_id": str(event.aggregate_id),
                     "event_type": event.event_type,
                     "topic": topic,
-                    "trace_id": envelope["trace_id"],
+                    "trace_id": envelope.get("trace_id"),
                 },
             )
 
-            with transaction.atomic():
-                updated = OutboxEvent.objects.filter(
-                    id=event.id,
-                    status="PENDING",
-                ).update(
-                    status="PUBLISHED",
-                    published_at=timezone.now(),
-                )
+        except Exception as exc:
+            # Retry logic
+            event.retry_count += 1
+            EVENTS_RETRY_COUNTER.inc()
 
-                if updated == 0:
-                    logger.warning("Outbox event already processed: %s", event.id)
+            if event.retry_count >= self.max_retries:
+                event.status = "FAILED"
+                EVENTS_FAILED_COUNTER.inc()
+                logger.error("Outbox event moved to FAILED after retries: %s", event.id)
 
-        except Exception:
-            with transaction.atomic():
-                event.retry_count += 1
-                if event.retry_count >= self.MAX_RETRIES:
-                    event.status = "FAILED"
-                event.save(update_fields=["retry_count", "status"])
-
+            event.save(update_fields=["retry_count", "status"])
             logger.exception("Failed to publish outbox event %s", event.id)

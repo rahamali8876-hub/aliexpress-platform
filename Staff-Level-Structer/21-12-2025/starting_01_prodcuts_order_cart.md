@@ -20,153 +20,19 @@ Ready for 100+ engineers
 
 It will be copy-pasteable and act as your single reference blueprint.
 🧠 HOLY GRAIL — EVENT FLOW (ASCII)
-┌─────────────────────────────────────────────────────────────┐
-│                        CLIENT (WEB / APP)                   │
-└───────────────▲─────────────────────────────────────────────┘
-                │ HTTP / REST / GraphQL
-                │
-┌───────────────┴─────────────────────────────────────────────┐
-│                 DJANGO API (DRF)                             │
-│                                                             │
-│  controllers / views / serializers                          │
-│  ❌ NO KAFKA                                                  │
-│  ❌ NO DB JOINS                                               │
-│                                                             │
-│        calls Application Use Case                            │
-└───────────────┬─────────────────────────────────────────────┘
-                │
-                ▼
-┌─────────────────────────────────────────────────────────────┐
-│              APPLICATION LAYER (USE CASES)                  │
-│                                                             │
-│  - create_product                                            │
-│  - place_order                                               │
-│  - add_to_cart                                               │
-│                                                             │
-│  ✅ Orchestrates                                             │
-│  ❌ No frameworks                                            │
-│                                                             │
-│        invokes Domain Aggregate                              │
-└───────────────┬─────────────────────────────────────────────┘
-                │
-                ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  DOMAIN LAYER (DDD CORE)                    │
-│                                                             │
-│  Aggregates / Entities / Value Objects                       │
-│                                                             │
-│  ✅ Business rules                                           │
-│  ✅ Invariants                                               │
-│  ❌ No DB                                                    │
-│  ❌ No Kafka                                                 │
-│                                                             │
-│        returns domain events                                 │
-└───────────────┬─────────────────────────────────────────────┘
-                │
-                ▼
-┌─────────────────────────────────────────────────────────────┐
-│            DB TRANSACTION (WRITE MODEL)                     │
-│                                                             │
-│  - product tables                                            │
-│  - order tables                                              │
-│                                                             │
-│  + OUTBOX TABLE                                              │
-│    (product_outbox, order_outbox, etc.)                      │
-│                                                             │
-│  ✅ ATOMIC COMMIT                                            │
-│                                                             │
-└───────────────┬─────────────────────────────────────────────┘
-                │
-                │ (background)
-                ▼
-┌─────────────────────────────────────────────────────────────┐
-│               OUTBOX PROCESSOR                               │
-│                                                             │
-│  - reads PENDING events                                      │
-│  - publishes to Kafka                                        │
-│  - marks SENT                                                │
-│                                                             │
-│  ✅ retry safe                                               │
-│  ✅ idempotent                                               │
-└───────────────┬─────────────────────────────────────────────┘
-                │
-                ▼
-┌─────────────────────────────────────────────────────────────┐
-│                         KAFKA                               │
-│                                                             │
-│  Topics:                                                     │
-│  - product.created                                           │
-│  - product.updated                                           │
-│  - order.placed                                              │
-│  - payment.authorized                                        │
-│                                                             │
-│  ✅ immutable facts                                          │
-│  ❌ no queries                                               │
-│                                                             │
-└───────┬───────────────┬───────────────┬─────────────────────┘
-        │               │               │
-        ▼               ▼               ▼
-┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐
-│ SEARCH       │  │ INVENTORY    │  │ PAYMENT / SHIPPING     │
-│ CONSUMER     │  │ CONSUMER     │  │ CONSUMERS              │
-│              │  │              │  │                        │
-│ product → ES │  │ reserve SKU  │  │ authorize / ship       │
-│              │  │              │  │                        │
-│ (READ MODEL) │  │ (SIDE EFFECT)│  │ (SIDE EFFECT)          │
-└───────┬──────┘  └───────┬──────┘  └─────────┬──────────────┘
-        │                 │                   │
-        ▼                 ▼                   ▼
-┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐
-│ ELASTICSEARCH│  │ INVENTORY DB │  │ PAYMENT PROVIDER / API │
-│ (QUERY FAST) │  │              │  │                        │
-└──────────────┘  └──────────────┘  └────────────────────────┘
+
+domain/        -> business rules only
+application/  -> use cases
+ports/        -> interfaces
+adapters/     -> Django, DB, Kafka
+read_model/   -> CQRS
+saga/         -> cross-domain workflows
+outbox/       -> delivery guarantee
+tests/        -> domain-local tests
+docs/         -> real engineering docs
 
 
-                   ┌────────────────────────────┐
-                   │          SAGAS             │
-                   │                            │
-                   │ OrderPlaced →              │
-                   │   InventoryReserved →      │
-                   │     PaymentAuthorized →    │
-                   │       ShippingRequested    │
-                   │                            │
-                   │ Compensation on failure    │
-                   └────────────────────────────┘
 ### 🔑 GOLDEN RULES (MEMORIZE)
-API        → commands
-DB         → truth
-Outbox     → guarantee
-Kafka      → facts
-Consumers  → reactions
-Read Model → speed
-Saga       → coordination
-
-HTTP Request
-   ↓
-Service Layer
-   ↓
-DB Transaction
-   ├─ Product.objects.create(...)
-   └─ OutboxEvent.objects.create(...)   ← YOU ARE MISSING THIS
-   ↓
-Commit
-   ↓
-process_outbox
-   ↓
-Kafka
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ### 🏆 HOLY GRAIL BLUEPRINT — ALIEXPRESS CLONE
 
@@ -179,93 +45,83 @@ aliexpress-clone-holy-grail/
 aliexpress-platform/
 
 ### Products Domain
+
 core/
 └── shared/
-    │
-    ├── kernel/                         # PURE DDD KERNEL (NO DJANGO)
-    │   │
-    │   ├── base_entity.py              # Entity base (id, equality)
-    │   ├── base_aggregate.py           # AggregateRoot + domain events
+    ├── kernel/                         # 🔒 PURE DOMAIN KERNEL (NO FRAMEWORKS)
+    │   ├── base_entity.py              # Entity base: identity, equality
+    │   ├── base_aggregate.py           # AggregateRoot + domain event recording
     │   ├── base_value_object.py        # Immutable value objects
-    │   ├── domain_event.py             # Base DomainEvent class
+    │   ├── domain_event.py             # Base DomainEvent abstraction
     │   ├── domain_service.py           # Stateless domain services
-    │   ├── policy.py                   # Business policies base
-    │   └── exceptions.py               # Domain-level exceptions
-            topics.py                     # Event topics mapping
-            event_routing.py               # Event → topic routing
+    │   ├── policy.py                   # Business rules / policies
+    │   ├── exceptions.py               # Domain-level exceptions
+    │   ├── topics.py                   # Logical event → topic names
+    │   └── event_routing.py            # Event → topic resolution logic
     │
-    │   # ❗ RULE:
-    │   # - No Django
-    │   # - No Kafka
-    │   # - No DB
+    │   # ❗ RULES (STRICT)
+    │   # - NO Django
+    │   # - NO Kafka
+    │   # - NO Database
+    │   # - Pure Python only
     │   # - Importable by ALL domains
     │
-    ├── infrastructure/                 # TECHNICAL IMPLEMENTATIONS
-    │   │
-    │   ├── messaging/                  # EVENT DELIVERY (ASYNC)
-    │   │   │
-    │   │   ├── message_broker.py       # ✅ Kafka PRODUCER (single source)
+    ├── infrastructure/                 # 🛠️ TECHNICAL IMPLEMENTATIONS
+    │   ├── messaging/                  # ASYNC EVENT DELIVERY
+    │   │   ├── event_envelope.py       # Standard event wrapper (metadata + payload)
+    │   │   ├── message_broker.py       # Kafka producer (single entry point)
     │   │   ├── kafka_consumer.py       # KafkaConsumer factory
-    │   │   ├── safe_consumer.py        # Retry / DLQ / backoff wrapper
-    │   │   ├── outbox_processor.py     # DB → Kafka publisher
-    │   │   └── event_envelope.py       # Standard event format
-            ├── schemas/
-            │   ├── product/
-            │   │   ├── product_created.v1.json
-            │   │   ├── product_created.v2.json
-            │   │   └── README.md
-            │   ├── _envelope/
-            │   │   ├── event_envelope.v1.json
-            │   │   └── README.md
-            │   └── README.md
-            ├── dlq/
-                    <!-- ├── README.md
-                    ├── dlq_publisher.py
-                    ├── retry_policy.py
-                    └── topics.md
-                    ├── dlq/ -->
-                │   ├── dlq_producer.py
-                │   └── dlq_utils.py
-                Producer  # Kafka producer singleton
-                    __init__.py
-                    schema_validator.py  # Avro schema registry client
-                consumers/
-                    ├── base_consumer.py
-                    ├── schema_compatibility.py
-                    ├── deserializer.py
-                    └── errors.py
-                    ├── retry_policy.py          👈 NEW
-            │       ├── retry_executor.py        👈 NEW
-    │   product_event_consumer.py  # Example consumer
-
-
-
-
+    │   │   ├── safe_consumer.py        # Retry / backoff / DLQ wrapper
+    │   │   ├── outbox_processor.py     # DB → Kafka publisher (Outbox pattern)
+                outbox_publisher.py    # Publishes OutboxEvents to Kafka
     │   │
-    │   │   # ❗ RULE:
+    │   │   ├── schemas/                # EVENT SCHEMAS (VERSIONED)
+    │   │   │   ├── product/
+    │   │   │   │   ├── product_created.v1.json
+    │   │   │   │   ├── product_created.v2.json
+    │   │   │   │   └── README.md
+    │   │   │   ├── _envelope/
+    │   │   │   │   ├── event_envelope.v1.json
+    │   │   │   │   └── README.md
+    │   │   │   └── README.md
+    │   │
+    │   │   ├── dlq/                    # DEAD LETTER QUEUE
+    │   │   │   ├── dlq_producer.py
+    │   │   │   └── dlq_utils.py
+    │   │
+    │   │   ├── producer/               # PRODUCER INTERNALS
+    │   │   │   ├── __init__.py
+    │   │   │   └── schema_validator.py # Avro / JSON Schema validation
+    │   │
+    │   │   ├── consumers/              # CONSUMER FRAMEWORK
+    │   │   │   ├── base_consumer.py
+    │   │   │   ├── deserializer.py
+    │   │   │   ├── schema_compatibility.py
+    │   │   │   ├── retry_policy.py     # Retry rules (count, delay, backoff)
+    │   │   │   ├── retry_executor.py   # Executes retries
+    │   │   │   └── errors.py
+    │   │
+    │   │   └── product_event_consumer.py  # Example concrete consumer
+    │   │
+    │   │   # ❗ RULES
     │   │   # - Kafka lives ONLY here
-    │   │   # - Domains NEVER import Kafka directly
-    │   │
-
-    │   └── transaction_utils.py    # atomic helpers
+    │   │   # - Domains NEVER import Kafka
     │   │
     │   ├── cache/                      # REDIS / CACHE
-    │   │   │
     │   │   ├── cache_manager.py        # Redis abstraction
-    │   │   └── cache_keys.py           # Shared cache key rules
+    │   │   └── cache_keys.py           # Shared cache key conventions
     │   │
-    │   ├── search/                     # ELASTICSEARCH
-    │   │   │
+    │   ├── search/                     # SEARCH INFRA
     │   │   └── elasticsearch_client.py
     │   │
-    │   ├── logging.py                  # Structured logging setup
-    │   ├── tracing.py                 # OpenTelemetry tracing
-    │   └── timeouts.py                # Infra timeouts / retries
+    │   ├── transaction_utils.py        # Atomic / transactional helpers
+    │   ├── logging.py                  # Structured logging config
+    │   ├── tracing.py                  # OpenTelemetry setup
+    │   └── timeouts.py                 # Infra timeouts / retries
     │
-    ├── observability/                  # VISIBILITY (OPS)
-    │   │
+    ├── observability/                  # 👁️ OPS VISIBILITY
     │   ├── logging/
-    │   │   ├── formatters.py           # JSON / structured logs
+    │   │   ├── formatters.py           # JSON / structured log formatters
     │   │   └── filters.py
     │   │
     │   ├── tracing/
@@ -273,30 +129,29 @@ core/
     │   │   └── middleware.py
     │   │
     │   └── metrics/
-    │       ├── prometheus.py           # Registry
-    │       └── counters.py             # Shared counters
+    │       ├── __init__.py
+            ├── counters.py          # low-level primitive counters ONLY
+            ├── outbox_metrics.py    # outbox-specific metrics
+            ├── consumer_metrics.py  # consumer helpers
+            └── metrics.py           # domain + API metrics (public surface)
     │
-    ├── utils/                          # GENERIC HELPERS
-    │   │
-    │   ├── datetime_utils.py           # Time helpers
-    │   ├── id_generator.py             # UUID / snowflake
-    │   └── validation_utils.py         # Shared validation
+    ├── utils/                          # 🧰 GENERIC HELPERS
+    │   ├── datetime_utils.py
+    │   ├── id_generator.py             # UUID / Snowflake
+    │   └── validation_utils.py
     │
-    ├── admin/                          # DJANGO ADMIN (OPS TOOLING)
-    │   │
+    ├── admin/                          # DJANGO ADMIN (OPS ONLY)
     │   └── outbox_admin.py             # OutboxEvent admin UI
     │
     ├── models/                         # ✅ SHARED DJANGO MODELS
-    │   │
     │   ├── __init__.py
-    │   └── outbox_event.py             # OutboxEvent (single source)
+    │   └── outbox_event.py             # OutboxEvent (single source of truth)
     │
     ├── management/
-    │   │
     │   └── commands/
     │       └── process_outbox.py       # Runs OutboxProcessor
     │
-    ├── apps.py                         # SharedConfig
+    ├── apps.py                         # SharedConfig (Django AppConfig)
     └── __init__.py
 
 
@@ -312,7 +167,9 @@ docker/
         Dockerfile
     elasticsearch/
         Dockerfile
+
 ### PRODUCTS DOMAIN — HOLY GRAIL STRUCTURE
+
     └── domains/
         └── products/
             ├── domain/                      # PURE BUSINESS (no Django)
@@ -454,6 +311,7 @@ docker/
                     └── adr.md                  # Architecture decisions
                         why.md                description for what these files doing and what
                         execution_roadmap.md   step by step execution plan
+                        aggregate_identity.md  defining aggregate identities
 
 🗂️ EXACT TEST FOLDER PLACEMENT (FINAL)
 ✅ DOMAIN-LOCAL TESTS (MOST IMPORTANT)
@@ -522,8 +380,8 @@ You now reuse this exact depth for:
 
 Only names change, structure stays.
 
-
 ### ORDERS DOMAIN — HOLY GRAIL STRUCTURE
+
 core/
 └── domains/
     └── orders/
@@ -676,8 +534,8 @@ core/
             ├── failure_scenarios.md
             └── adr.md
 
-
 ### CART DOMAIN — HOLY GRAIL STRUCTURE
+
 core/
 └── domains/
     └── orders/
@@ -838,5 +696,3 @@ You now reuse this exact depth for:
 ✅ Search (read-model heavy)
 
 Only names change, structure stays.
-
-                                                                        

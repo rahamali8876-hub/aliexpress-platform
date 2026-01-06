@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from uuid import UUID
-from datetime import datetime
+# from datetime import datetime
 
 from core.shared.kernel.domain_event import DomainEvent
 
@@ -12,7 +12,7 @@ class ProductCreated(DomainEvent):
     aggregate_id: UUID
     seller_id: UUID
     title: str
-    occurred_at: datetime = field(default_factory=datetime.utcnow)
+    # occurred_at: datetime = field(default_factory=datetime.utcnow)
 
     # 🔐 Stable contracts (NOT part of __init__)
     event_type: str = field(init=False, default="product.created")
@@ -28,43 +28,3 @@ class ProductCreated(DomainEvent):
             "title": self.title,
             "occurred_at": self.occurred_at.isoformat(),
         }
-
-
-# from dataclasses import dataclass, field
-# from uuid import UUID
-# from datetime import datetime
-# from core.shared.kernel.domain_event import DomainEvent
-
-
-# @dataclass(frozen=True)
-# class ProductCreated(DomainEvent):
-#     aggregate_id: UUID
-#     seller_id: UUID
-#     title: str
-#     occurred_at: datetime = field(default_factory=datetime.utcnow)
-
-#     event_type: str = field(init=False, default="product.created")
-
-#     def to_primitives(self) -> dict:
-#         return {
-#             "product_id": str(self.aggregate_id),
-#             "seller_id": str(self.seller_id),
-#             "title": self.title,
-#             "occurred_at": self.occurred_at.isoformat(),
-#         }
-
-
-# @dataclass(frozen=True)
-# class ProductCreated(DomainEvent):
-#     aggregate_id: UUID
-#     seller_id: UUID
-#     title: str
-#     occurred_at: datetime = field(default_factory=datetime.now)
-
-#     def to_primitives(self) -> dict:
-#         return {
-#             "product_id": str(self.aggregate_id),
-#             "seller_id": str(self.seller_id),
-#             "title": self.title,
-#             "occurred_at": self.occurred_at.isoformat(),
-#         }

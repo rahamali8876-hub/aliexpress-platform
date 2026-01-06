@@ -3,7 +3,6 @@
 from core.shared.kernel.base_aggregate import BaseAggregate
 from ..entities.product import Product
 from ..domain_events.product_created import ProductCreated
-from datetime import datetime
 
 
 class ProductAggregate(BaseAggregate):
@@ -15,7 +14,11 @@ class ProductAggregate(BaseAggregate):
             title=title,
         )
 
-        aggregate = cls(product_id)
+        # aggregate = cls(product_id)
+        aggregate = cls(aggregate_id=product_id)
+
+        # aggregate = cls(aggregate_id=product_id)
+
         aggregate.product = product
 
         aggregate.raise_event(
@@ -23,7 +26,7 @@ class ProductAggregate(BaseAggregate):
                 aggregate_id=product_id,
                 seller_id=seller_id,
                 title=title,
-                occurred_at=datetime.now(),
+                # occurred_at=datetime.now(),
             )
         )
 
