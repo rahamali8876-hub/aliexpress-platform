@@ -3,6 +3,8 @@ import logging
 from typing import Optional
 from django.db import transaction
 from django.utils import timezone
+import socket
+from django.db.models import Min, Max
 
 from core.shared.models.outbox_event import OutboxEvent
 from core.shared.infrastructure.messaging.message_broker import get_kafka_producer
@@ -27,6 +29,20 @@ class OutboxPublisher:
     5. Support multiple workers
     6. Expose metrics and observability
     """
+
+    ...
+
+    def run_once(self):
+        """
+        Process a single batch of outbox events and exit.
+        Useful for cron jobs, manual runs, or debugging.
+        """
+        logger.info("OutboxPublisher run_once started")
+
+        try:
+            self._process_batch()
+        except Exception:
+            logger.exception("OutboxPublisher run_once failed")
 
     def __init__(
         self,
@@ -65,9 +81,6 @@ class OutboxPublisher:
         logger.info("OutboxPublisher stopping...")
 
     def _process_batch(self):
-        """
-        Fetch a batch of PENDING events and process them safely.
-        """
         with transaction.atomic():
             events = list(
                 OutboxEvent.objects.select_for_update(skip_locked=True)
@@ -77,6 +90,19 @@ class OutboxPublisher:
 
         if not events:
             return
+
+        # 🔥 ONE-TIME BATCH LOG
+        logger.info(
+            "Outbox batch picked for publishing",
+            extra={
+                "batch_size": len(events),
+                "event_ids": [str(e.id) for e in events[:5]],  # first 5 only
+                "oldest_event_at": events[0].created_at.isoformat(),
+                "newest_event_at": events[-1].created_at.isoformat(),
+                "max_retry_in_batch": max(e.retry_count for e in events),
+                "worker": socket.gethostname(),
+            },
+        )
 
         for event in events:
             self._process_event(event)
@@ -90,7 +116,8 @@ class OutboxPublisher:
         - Metrics logging
         """
         try:
-            self.processor._publish_event(event)  # staff-grade atomic & ack
+            # self.processor._publish_event(event)  # staff-grade atomic & ack
+            self.processor.publish(event)
 
             # ✅ Metrics
             EVENTS_PROCESSED_COUNTER.inc()
