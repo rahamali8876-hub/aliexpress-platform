@@ -4,7 +4,6 @@ from django.contrib import admin
 from core.shared.models.outbox_event import OutboxEvent
 
 
-
 @admin.register(OutboxEvent)
 class OutboxEventAdmin(admin.ModelAdmin):
     list_display = (

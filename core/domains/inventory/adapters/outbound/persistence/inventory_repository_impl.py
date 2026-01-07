@@ -1,4 +1,4 @@
-# from core.domains.inventory.application.use_cases.create_inventory_for_product.command import CreateInventoryForProductCommand
+# filename : core/domains/inventory/adapters/outbound/persistence/inventory_repository_impl.py
 
 from core.domains.inventory.application.ports.outbound.inventory_repository import (
     InventoryRepository,

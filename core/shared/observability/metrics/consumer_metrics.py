@@ -1,20 +1,3 @@
-# from core.shared.infrastructure.observability.metrics.counters import (
-#     DLQ_COUNTER,
-#     RETRY_COUNTER,
-# )
-
-
-# class ConsumerMetrics:
-#     @staticmethod
-#     def increment_dlq(topic: str, reason: str):
-#         DLQ_COUNTER.labels(topic=topic, reason=reason).inc()
-#         print(f"[METRICS] DLQ incremented for topic={topic}, reason={reason}")
-
-#     @staticmethod
-#     def increment_retry(topic: str):
-#         RETRY_COUNTER.labels(topic=topic).inc()
-#         print(f"[METRICS] Retry incremented for topic={topic}")
-
 
 # core/shared/observability/metrics/consumer_metrics.py
 from core.shared.observability.metrics.counters import (

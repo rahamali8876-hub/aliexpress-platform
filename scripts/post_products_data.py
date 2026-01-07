@@ -7,7 +7,7 @@ from typing import Dict
 
 
 URL = "http://localhost:8000/api/v1/products/"
-TOTAL_REQUESTS = 100000000
+TOTAL_REQUESTS = 1000
 PROCESSES = 4
 TIMEOUT = 5
 

@@ -1,3 +1,4 @@
+# filename : core/shared/infrastructure/messaging/outbox_publisher.py
 import time
 import logging
 from typing import Optional
@@ -5,14 +6,16 @@ from django.db import transaction
 from django.utils import timezone
 import socket
 from django.db.models import Min, Max
-
+from django.db import models
 from core.shared.models.outbox_event import OutboxEvent
 from core.shared.infrastructure.messaging.message_broker import get_kafka_producer
 from core.shared.infrastructure.messaging.outbox_processor import OutboxProcessor
-from core.shared.observability.metrics.prometheus import (
+
+from core.shared.observability.metrics.outbox_metrics import (
     EVENTS_PROCESSED_COUNTER,
     EVENTS_FAILED_COUNTER,
 )
+
 
 logger = logging.getLogger(__name__)
 
@@ -32,18 +35,6 @@ class OutboxPublisher:
 
     ...
 
-    def run_once(self):
-        """
-        Process a single batch of outbox events and exit.
-        Useful for cron jobs, manual runs, or debugging.
-        """
-        logger.info("OutboxPublisher run_once started")
-
-        try:
-            self._process_batch()
-        except Exception:
-            logger.exception("OutboxPublisher run_once failed")
-
     def __init__(
         self,
         batch_size: int = 50,
@@ -58,6 +49,18 @@ class OutboxPublisher:
         self.processor = OutboxProcessor(producer=self.producer)
 
         self.running = False
+
+    def run_once(self):
+        """
+        Process a single batch of outbox events and exit.
+        Useful for cron jobs, manual runs, or debugging.
+        """
+        logger.info("OutboxPublisher run_once started")
+
+        try:
+            self._process_batch()
+        except Exception:
+            logger.exception("OutboxPublisher run_once failed")
 
     def start(self):
         """
@@ -80,54 +83,118 @@ class OutboxPublisher:
         self.running = False
         logger.info("OutboxPublisher stopping...")
 
+    # def _process_batch(self):
+    #     with transaction.atomic():
+    #         logging.debug("Fetching pending outbox events")
+    #         events = list(
+    #             OutboxEvent.objects.select_for_update(skip_locked=True)
+    #             .filter(status="PENDING", retry_count__lt=self.max_retries)
+    #             .order_by("created_at")[: self.batch_size]
+    #         )
+
+    #     if not events:
+    #         logger.debug("No pending outbox events found")
+    #         return
+
+    #     # 🔥 ONE-TIME BATCH LOG
+    #     logger.info(
+    #         "Outbox batch picked for publishing",
+    #         extra={
+    #             "batch_size": len(events),
+    #             "event_ids": [str(e.id) for e in events[:5]],  # first 5 only
+    #             "oldest_event_at": events[0].created_at.isoformat(),
+    #             "newest_event_at": events[-1].created_at.isoformat(),
+    #             "max_retry_in_batch": max(e.retry_count for e in events),
+    #             "worker": socket.gethostname(),
+    #         },
+    #     )
+
+    #     for event in events:
+    #         self._process_event(event)
+
     def _process_batch(self):
+        worker_id = socket.gethostname()
+
         with transaction.atomic():
             events = list(
                 OutboxEvent.objects.select_for_update(skip_locked=True)
-                .filter(status="PENDING", retry_count__lt=self.max_retries)
+                .filter(
+                    status=OutboxEvent.STATUS_PENDING,
+                    retry_count__lt=self.max_retries,
+                )
                 .order_by("created_at")[: self.batch_size]
             )
 
-        if not events:
-            return
+            if not events:
+                return
 
-        # 🔥 ONE-TIME BATCH LOG
-        logger.info(
-            "Outbox batch picked for publishing",
-            extra={
-                "batch_size": len(events),
-                "event_ids": [str(e.id) for e in events[:5]],  # first 5 only
-                "oldest_event_at": events[0].created_at.isoformat(),
-                "newest_event_at": events[-1].created_at.isoformat(),
-                "max_retry_in_batch": max(e.retry_count for e in events),
-                "worker": socket.gethostname(),
-            },
-        )
+            OutboxEvent.objects.filter(id__in=[e.id for e in events]).update(
+                status="PROCESSING",
+                processing_owner=worker_id,
+                processing_started_at=timezone.now(),
+            )
 
+        # 🚨 locks released here — SAFE
         for event in events:
-            self._process_event(event)
+            self._process_event(event, worker_id)
 
-    def _process_event(self, event: OutboxEvent):
-        """
-        Publish a single event with:
-        - Exactly-once delivery
-        - Aggregate-keyed Kafka partitioning
-        - Retry handling
-        - Metrics logging
-        """
+    # def _process_event(self, event: OutboxEvent):
+    #     """
+    #     Publish a single event with:
+    #     - Exactly-once delivery
+    #     - Aggregate-keyed Kafka partitioning
+    #     - Retry handling
+    #     - Metrics logging
+    #     """
+    #     try:
+    #         # self.processor._publish_event(event)  # staff-grade atomic & ack
+    #         self.processor.publish(event)
+
+    #         # ✅ Metrics
+    #         EVENTS_PROCESSED_COUNTER.inc()
+
+    #     except Exception:
+    #         # Retry counter + fail logic
+    #         event.retry_count += 1
+    #         if event.retry_count >= self.max_retries:
+    #             event.status = "FAILED"
+    #             logger.error("Outbox event moved to FAILED: %s", event.id)
+    #             EVENTS_FAILED_COUNTER.inc()
+    #         event.save(update_fields=["retry_count", "status"])
+    #         logger.exception("Failed to publish outbox event %s", event.id)
+    
+    def _process_event(self, event: OutboxEvent, worker_id: str):
         try:
-            # self.processor._publish_event(event)  # staff-grade atomic & ack
             self.processor.publish(event)
 
-            # ✅ Metrics
+            updated = OutboxEvent.objects.filter(
+                id=event.id,
+                status="PROCESSING",
+                processing_owner=worker_id,
+            ).update(
+                status=OutboxEvent.STATUS_PUBLISHED,
+                published_at=timezone.now(),
+                processing_started_at=None,
+            )
+
+            if updated != 1:
+                logger.warning(
+                    "Lost ownership while publishing outbox event %s", event.id
+                )
+
             EVENTS_PROCESSED_COUNTER.inc()
 
         except Exception:
-            # Retry counter + fail logic
-            event.retry_count += 1
-            if event.retry_count >= self.max_retries:
-                event.status = "FAILED"
-                logger.error("Outbox event moved to FAILED: %s", event.id)
-                EVENTS_FAILED_COUNTER.inc()
-            event.save(update_fields=["retry_count", "status"])
+            OutboxEvent.objects.filter(
+                id=event.id,
+                status="PROCESSING",
+                processing_owner=worker_id,
+            ).update(
+                status=OutboxEvent.STATUS_PENDING,
+                retry_count=models.F("retry_count") + 1,
+                processing_owner=None,
+                processing_started_at=None,
+            )
+
+            EVENTS_FAILED_COUNTER.inc()
             logger.exception("Failed to publish outbox event %s", event.id)

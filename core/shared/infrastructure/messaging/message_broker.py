@@ -60,11 +60,20 @@ def get_kafka_producer():
     retries = 5
     delay = 3
 
+    def safe_utf8_serializer(value):
+        if value is None:
+            return None
+        if isinstance(value, bytes):
+            return value
+        return str(value).encode("utf-8")
+
     for attempt in range(retries):
         try:
             _producer = KafkaProducer(
                 bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
-                key_serializer=lambda k: k.encode("utf-8"),
+                # key_serializer=lambda k: k.encode("utf-8"),
+                # value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+                key_serializer=safe_utf8_serializer,
                 value_serializer=lambda v: json.dumps(v).encode("utf-8"),
                 acks="all",
                 retries=5,
