@@ -1,3 +1,4 @@
+# filename : core/shared/infrastructure/messaging/schemas/validators.py
 class SchemaValidationError(Exception):
     pass
 

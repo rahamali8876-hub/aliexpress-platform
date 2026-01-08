@@ -12,3 +12,4 @@ class Command(BaseCommand):
 
         publisher = OutboxPublisher()
         publisher.run_once()
+        # publisher.start()

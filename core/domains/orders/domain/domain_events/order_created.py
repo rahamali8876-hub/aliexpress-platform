@@ -1,6 +1,6 @@
 class OrderCreatedEvent:
     type = "order.created"
-    version = 1
+    event_version = 1
 
     def __init__(self, order):
         self.payload = {

@@ -33,6 +33,22 @@ docs/         -> real engineering docs
 
 
 ### 🔑 GOLDEN RULES (MEMORIZE)
+STAFF-LEVEL RULES (NON-NEGOTIABLE)
+Rule 1
+
+Domain does NOT know Kafka
+
+Rule 2
+
+OutboxProcessor only publishes envelopes — never raw payloads
+
+Rule 3
+
+There is exactly ONE place that defines the Kafka event envelope
+
+Rule 4
+
+Kafka producer creation is infrastructure-only and singleton
 
 ### 🏆 HOLY GRAIL BLUEPRINT — ALIEXPRESS CLONE
 
@@ -44,38 +60,57 @@ aliexpress-clone-holy-grail/
 1️⃣ ROOT FOLDER STRUCTURE
 aliexpress-platform/
 
-### Products Domain
-
+### CLEANED & CANONICAL STRUCTURE (PRODUCTION GRADE)
 core/
 └── shared/
-    ├── kernel/                         # 🔒 PURE DOMAIN KERNEL (NO FRAMEWORKS)
-    │   ├── base_entity.py              # Entity base: identity, equality
+    ├── kernel/                         # 🔒 PURE DOMAIN KERNEL (FRAMEWORK-FREE)
+    │   ├── base_entity.py              # Entity identity & equality
     │   ├── base_aggregate.py           # AggregateRoot + domain event recording
     │   ├── base_value_object.py        # Immutable value objects
     │   ├── domain_event.py             # Base DomainEvent abstraction
     │   ├── domain_service.py           # Stateless domain services
-    │   ├── policy.py                   # Business rules / policies
+    │   ├── policy.py                   # Business rules / invariants
     │   ├── exceptions.py               # Domain-level exceptions
-    │   ├── topics.py                   # Logical event → topic names
-    │   └── event_routing.py            # Event → topic resolution logic
+    │   ├── topics.py                   # Logical event → topic names (NO Kafka)
+    │   └── event_routing.py            # Event → logical topic resolution
     │
-    │   # ❗ RULES (STRICT)
+    │   # ❗ RULES
     │   # - NO Django
     │   # - NO Kafka
-    │   # - NO Database
+    │   # - NO DB
     │   # - Pure Python only
-    │   # - Importable by ALL domains
+    │   # - Safe to import from ANY layer
     │
     ├── infrastructure/                 # 🛠️ TECHNICAL IMPLEMENTATIONS
-    │   ├── messaging/                  # ASYNC EVENT DELIVERY
-    │   │   ├── event_envelope.py       # Standard event wrapper (metadata + payload)
-    │   │   ├── message_broker.py       # Kafka producer (single entry point)
-    │   │   ├── kafka_consumer.py       # KafkaConsumer factory
-    │   │   ├── safe_consumer.py        # Retry / backoff / DLQ wrapper
-    │   │   ├── outbox_processor.py     # DB → Kafka publisher (Outbox pattern)
-                outbox_publisher.py    # Publishes OutboxEvents to Kafka
+    │
+    │   ├── messaging/                  # 📡 ASYNC MESSAGING (Kafka-based)
     │   │
-    │   │   ├── schemas/                # EVENT SCHEMAS (VERSIONED)
+    │   │   ├── publisher.py            # ⭐ PUBLIC MESSAGING FACADE (PUT IT HERE)
+    │   │   │                           # - publish_retry()
+    │   │   │                           # - publish_to_dlq()
+    │   │   │                           # - ONLY import used by consumers
+    │   │
+    │   │   ├── kafka_consumer.py        # KafkaConsumer factory / config
+    │   │   ├── safe_consumer.py         # Retry / backoff / DLQ orchestration
+    │   │   ├── outbox_publisher.py      # Publishes OutboxEvents → Kafka
+    │   │
+    │   │   ├── broker/                  # 🔌 LOW-LEVEL KAFKA
+    │   │   │   ├── kafka_producer.py    # Kafka connection & singleton
+    │   │   │   └── __init__.py
+    │   │
+    │   │   ├── envelope/                # ✉️ EVENT WRAPPING (SOURCE OF TRUTH)
+    │   │   │   ├── event_envelope.py    # version, metadata, trace_id, retries
+    │   │   │   └── __init__.py
+    │   │
+    │   │   ├── routing/                 # Kafka topic resolution
+    │   │   │   ├── event_router.py      # Event type → Kafka topic
+    │   │   │   └── __init__.py
+    │   │
+    │   │   ├── outbox/                  # OUTBOX PATTERN
+    │   │   │   ├── outbox_processor.py  # DB → Envelope → Kafka
+    │   │   │   └── __init__.py
+    │   │
+    │   │   ├── schemas/                 # 📜 EVENT SCHEMAS (VERSIONED)
     │   │   │   ├── product/
     │   │   │   │   ├── product_created.v1.json
     │   │   │   │   ├── product_created.v2.json
@@ -85,31 +120,29 @@ core/
     │   │   │   │   └── README.md
     │   │   │   └── README.md
     │   │
-    │   │   ├── dlq/                    # DEAD LETTER QUEUE
-    │   │   │   ├── dlq_producer.py
-    │   │   │   └── dlq_utils.py
+    │   │   ├── producer/                # PRODUCER INTERNALS
+    │   │   │   ├── schema_validator.py  # JSON / Avro validation
+    │   │   │   └── __init__.py
     │   │
-    │   │   ├── producer/               # PRODUCER INTERNALS
-    │   │   │   ├── __init__.py
-    │   │   │   └── schema_validator.py # Avro / JSON Schema validation
-    │   │
-    │   │   ├── consumers/              # CONSUMER FRAMEWORK
-    │   │   │   ├── base_consumer.py
-    │   │   │   ├── deserializer.py
+    │   │   ├── consumers/               # CONSUMER FRAMEWORK
+    │   │   │   ├── base_consumer.py     # Abstract consumer
+    │   │   │   ├── deserializer.py      # Envelope → event
     │   │   │   ├── schema_compatibility.py
-    │   │   │   ├── retry_policy.py     # Retry rules (count, delay, backoff)
-    │   │   │   ├── retry_executor.py   # Executes retries
-    │   │   │   └── errors.py
+    │   │   │   ├── retry_policy.py
+    │   │   │   ├── retry_executor.py
+    │   │   │   ├── errors.py
+    │   │   │   └── __init__.py
     │   │
-    │   │   └── product_event_consumer.py  # Example concrete consumer
+    │   │   └── product_event_consumer.py # Example concrete consumer
     │   │
     │   │   # ❗ RULES
-    │   │   # - Kafka lives ONLY here
-    │   │   # - Domains NEVER import Kafka
-    │   │
+    │   │   # - Kafka exists ONLY here
+    │   │   # - Consumers NEVER import kafka_producer directly
+    │   │   # - Consumers import ONLY `publisher.py`
+    │
     │   ├── cache/                      # REDIS / CACHE
-    │   │   ├── cache_manager.py        # Redis abstraction
-    │   │   └── cache_keys.py           # Shared cache key conventions
+    │   │   ├── cache_manager.py
+    │   │   └── cache_keys.py
     │   │
     │   ├── search/                     # SEARCH INFRA
     │   │   └── elasticsearch_client.py
@@ -119,42 +152,40 @@ core/
     │   ├── tracing.py                  # OpenTelemetry setup
     │   └── timeouts.py                 # Infra timeouts / retries
     │
-    ├── observability/                  # 👁️ OPS VISIBILITY
+    ├── observability/                  # 👁️ OPS / VISIBILITY
     │   ├── logging/
-    │   │   ├── formatters.py           # JSON / structured log formatters
+    │   │   ├── formatters.py
     │   │   └── filters.py
     │   │
     │   ├── tracing/
-    │   │   ├── tracer.py               # Span helpers
+    │   │   ├── tracer.py
     │   │   └── middleware.py
     │   │
     │   └── metrics/
-    │       ├── __init__.py
-            ├── counters.py          # low-level primitive counters ONLY
-            ├── outbox_metrics.py    # outbox-specific metrics
-            ├── consumer_metrics.py  # consumer helpers
-            └── metrics.py           # domain + API metrics (public surface)
+    │       ├── counters.py             # Low-level primitives ONLY
+    │       ├── outbox_metrics.py
+    │       ├── consumer_metrics.py
+    │       └── metrics.py              # Public metrics API
     │
     ├── utils/                          # 🧰 GENERIC HELPERS
     │   ├── datetime_utils.py
-    │   ├── id_generator.py             # UUID / Snowflake
+    │   ├── id_generator.py
     │   └── validation_utils.py
     │
-    ├── admin/                          # DJANGO ADMIN (OPS ONLY)
-    │   └── outbox_admin.py             # OutboxEvent admin UI
-    │
     ├── models/                         # ✅ SHARED DJANGO MODELS
-    │   ├── __init__.py
-    │   └── outbox_event.py             # OutboxEvent (single source of truth)
+    │   └── outbox_event.py             # OutboxEvent (DB source of truth)
+    │
+    ├── admin/                          # DJANGO ADMIN (OPS ONLY)
+    │   └── outbox_admin.py
     │
     ├── management/
     │   └── commands/
     │       └── process_outbox.py       # Runs OutboxProcessor
     │
-    ├── apps.py                         # SharedConfig (Django AppConfig)
+    ├── apps.py                         # Django AppConfig
     └── __init__.py
 
-
+### Infrastructure Dockerfiles
 docker/
     django/
         Dockerfile

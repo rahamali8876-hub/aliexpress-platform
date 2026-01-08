@@ -8,8 +8,8 @@ import socket
 from django.db.models import Min, Max
 from django.db import models
 from core.shared.models.outbox_event import OutboxEvent
-from core.shared.infrastructure.messaging.message_broker import get_kafka_producer
-from core.shared.infrastructure.messaging.outbox_processor import OutboxProcessor
+from core.shared.infrastructure.messaging.broker.kafka_producer import get_kafka_producer
+from core.shared.infrastructure.messaging.outbox.outbox_processor import OutboxProcessor
 
 from core.shared.observability.metrics.outbox_metrics import (
     EVENTS_PROCESSED_COUNTER,

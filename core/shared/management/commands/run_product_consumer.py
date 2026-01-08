@@ -14,7 +14,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         consumer = create_consumer(
-            topics=["product.events",],
+            topics=[
+                "product.events",
+            ],
             group_id="product-consumer-group",
         )
         handler = ProductCreatedConsumer()

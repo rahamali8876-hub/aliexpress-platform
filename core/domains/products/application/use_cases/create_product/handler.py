@@ -5,6 +5,9 @@ from django.db import transaction
 from core.domains.products.domain.aggregates.product_aggregate import ProductAggregate
 from core.shared.models.outbox_event import OutboxEvent
 from core.shared.observability.metrics.metrics import products_created_total
+from django.utils.timezone import now
+# from core.settings import SERVICE_NAME
+SERVICE_NAME = "products_service"
 
 
 class CreateProductHandler:
@@ -23,14 +26,29 @@ class CreateProductHandler:
 
             self.repository.save(aggregate)
 
+            # for event in aggregate.pull_domain_events():
+            #     OutboxEvent.objects.create(
+            #         aggregate_id=event.aggregate_id,
+            #         event_type=event.event_type,
+            #         event_version=event.event_version,
+            #         payload=event.to_primitives(),
+            #     )
+
             for event in aggregate.pull_domain_events():
                 OutboxEvent.objects.create(
                     aggregate_id=event.aggregate_id,
-                    # event_type=event.__class__.__name__,
-                    # aggregate_type = event.aggregate_type
+                    aggregate_type="Product",
                     event_type=event.event_type,
                     event_version=event.event_version,
-                    payload=event.to_primitives(),
+                    payload={
+                        "event_version": event.event_version,  # ✅ REQUIRED
+                        "data": event.to_primitives(),  # ✅ DOMAIN DATA ONLY
+                        "metadata": {
+                            "source": SERVICE_NAME,
+                            "occurred_at": event.occurred_at.isoformat(),
+                            "event_id": str(uuid.uuid4()),
+                        },
+                    },
                 )
 
             products_created_total.inc()

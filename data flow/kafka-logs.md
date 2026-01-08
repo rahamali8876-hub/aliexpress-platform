@@ -23,6 +23,9 @@ docker exec -it aliexpress_kafka kafka-consumer-groups \
   --describe \
   --group product-consumer-group
 
+docker compose exec api python manage.py process_outbox
 docker compose exec api python manage.py run_product_consumer
+docker compose exec api python manage.py run_product_event_consumer
+
 
  docker exec -it aliexpress_kafka kafka-consumer-groups   --bootstrap-server aliexpress_kafka:9092   --describe   --group product-consumer-group
