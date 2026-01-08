@@ -345,51 +345,6 @@ docker/
                         aggregate_identity.md  defining aggregate identities
 
 🗂️ EXACT TEST FOLDER PLACEMENT (FINAL)
-✅ DOMAIN-LOCAL TESTS (MOST IMPORTANT)
-
-Each domain owns its own tests.
-
-Example: Products
-core/domains/products/
-├── domain/
-├── application/
-├── adapters/
-├── saga/
-├── outbox/
-├── read_model/
-│
-├── tests/
-│   ├── domain/           # PURE BUSINESS RULES
-│   │   ├── test_product_aggregate.py
-│   │   ├── test_pricing_policy.py
-│   │   ├── test_product_status.py
-│   │   └── test_variant_generation.py
-│   │
-│   ├── application/      # USE CASES
-│   │   ├── test_create_product.py
-│   │   ├── test_publish_product.py
-│   │   └── test_update_pricing.py
-│   │
-│   ├── adapters/         # IO / FRAMEWORK
-│   │   ├── rest/
-│   │   │   ├── test_product_api.py
-│   │   │   └── test_serializers.py
-│   │   │
-│   │   ├── persistence/
-│   │   │   └── test_product_repository.py
-│   │   │
-│   │   └── messaging/
-│   │       └── test_product_event_publisher.py
-│   │
-│   ├── saga/
-│   │   └── test_product_publish_saga.py
-│   │
-│   ├── read_model/
-│   │   └── test_product_search_projection.py
-│   │
-│   └── outbox/
-│       └── test_product_outbox.py
-🔁 APPLY THIS TEMPLATE TO EVERY DOMAIN
 
 You now reuse this exact depth for:
 

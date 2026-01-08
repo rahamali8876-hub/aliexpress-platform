@@ -10,9 +10,10 @@ from core.domains.products.read_model.projections.product_event_projection impor
 )
 
 TOPICS = ["product.events"]
-GROUP_ID = "product-event-consumer"
+GROUP_ID = "product-event-projection-group"
 
-logger = get_logger("product-event-consumer")
+
+logger = get_logger("product-event-projection-group")
 projection = ProductEventProjection()
 
 
