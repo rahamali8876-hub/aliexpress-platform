@@ -2,18 +2,12 @@
 
 import logging
 from typing import Optional, List
-
-# from core.shared.elasticsearch.client import es_client
 from core.shared.infrastructure.search.elasticsearch_client import get_es_client
-
-# curl -X GET http://127.0.0.1:9200/products_search/_count
 
 
 class ProductSearchRepository:
     logging.debug("ProductSearchRepository initialized.")
     INDEX_ALIAS = "products_search"
-    # INDEX_ALIAS = "product_search_current"
-    # INDEX_ALIAS = "products_search_v1"
 
     def search(
         self,
@@ -26,7 +20,8 @@ class ProductSearchRepository:
         filter_ = []
 
         if title:
-            must.append({"match": {"name": {"query": title, "operator": "and"}}})
+            # must.append({"match": {"name": {"query": title, "operator": "and"}}})
+            must.append({"match": {"title": {"query": title, "operator": "and"}}})
 
         if min_price is not None or max_price is not None:
             price_filter = {}
@@ -37,9 +32,15 @@ class ProductSearchRepository:
 
             filter_.append({"range": {"price": price_filter}})
 
+        # query = {
+        #     "bool": {
+        #         "must": must if must else [{"match_all": {}}],
+        #         "filter": filter_,
+        #     }
+        # }
         query = {
             "bool": {
-                "must": must if must else [{"match_all": {}}],
+                "must": must or [{"match_all": {}}],
                 "filter": filter_,
             }
         }

@@ -29,9 +29,11 @@
     Index: product_search_v1_xxxx
 
 
-    docker compose exec api python manage.py process_outbox
-    docker compose exec api python manage.py run_product_event_consumer
-    docker compose exec api python manage.py run_product_consumer
+
+uv run ./scripts/post_products_data.py 
+docker compose exec api python manage.py process_outbox
+docker compose exec api python manage.py run_product_event_consumer
+docker compose exec api python manage.py run_product_consumer
 
 
 ### curl -X PUT http://127.0.0.1:9200/products_v1 \
@@ -76,3 +78,5 @@ curl -X POST http://127.0.0.1:9200/_aliases \
       }
     ]
   }'
+
+  

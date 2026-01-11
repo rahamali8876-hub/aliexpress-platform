@@ -9,6 +9,7 @@ class ProductModel(models.Model):
     seller_id = models.UUIDField()
     title = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=3, default=0.0)
+    status = models.CharField(max_length=50, default="draft")
     # is_published = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
